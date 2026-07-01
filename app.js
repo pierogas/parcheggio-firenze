@@ -98,24 +98,16 @@ function parseWhenFromText(text, base) {
 }
 
 // ---------- Calcolo regole di pulizia ----------
-function isoWeekNumber(date) {
-  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-  const dayNum = (d.getUTCDay() + 6) % 7;
-  d.setUTCDate(d.getUTCDate() - dayNum + 3);
-  const firstThursday = new Date(Date.UTC(d.getUTCFullYear(), 0, 4));
-  const diff = (d - firstThursday) / 86400000;
-  return 1 + Math.round(diff / 7);
-}
-
 function ruleMatchesDate(rule, date) {
   if (DAY_CODE_TO_JS[rule.day] !== date.getDay()) return false;
   const occ = Math.ceil(date.getDate() / 7); // 1..5, quale occorrenza del giorno settimana nel mese
   const weekFlags = [rule.w1, rule.w2, rule.w3, rule.w4, rule.w5];
   if (weekFlags[occ - 1] !== 1) return false;
+  const dayOfMonthEven = date.getDate() % 2 === 0;
   if (rule.pari === 1 && rule.dispari === 0) {
-    if (isoWeekNumber(date) % 2 !== 0) return false;
+    if (!dayOfMonthEven) return false;
   } else if (rule.dispari === 1 && rule.pari === 0) {
-    if (isoWeekNumber(date) % 2 !== 1) return false;
+    if (dayOfMonthEven) return false;
   }
   return true;
 }
@@ -170,8 +162,8 @@ function describeFrequency(rule) {
     const occ = flags.map((f, i) => f === 1 ? ORDINAL[i] : null).filter(Boolean);
     base = (occ.length ? occ.join(' e ') : '—') + ' ' + capitalize(dayName) + ' del mese';
   }
-  if (rule.pari === 1 && rule.dispari === 0) base += ', settimane pari dell\'anno';
-  if (rule.dispari === 1 && rule.pari === 0) base += ', settimane dispari dell\'anno';
+  if (rule.pari === 1 && rule.dispari === 0) base += ', nei giorni pari del mese';
+  if (rule.dispari === 1 && rule.pari === 0) base += ', nei giorni dispari del mese';
   return base + ', ore ' + rule.s + '–' + rule.e + (rule.nott === 1 ? ' (notturna)' : '');
 }
 

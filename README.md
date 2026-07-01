@@ -87,11 +87,14 @@ open data del Comune di Firenze.
 Ogni regola del dataset ha: giorno della settimana, orario, e 5 flag
 (`prima_settimana` … `quinta_settimana`) che indicano su quali occorrenze del
 mese si applica (es. solo il 1° e 3° martedì), più due flag `pari`/`dispari`
-che restringono ulteriormente alle settimane pari o dispari **dell'anno**
-(numero di settimana ISO). L'app applica entrambi i filtri direttamente:
-se tutti e 5 i flag settimana-del-mese sono a 1, la pulizia è settimanale
-(eventualmente ogni 2 settimane se pari/dispari è impostato); altrimenti si
-applica solo nelle occorrenze del mese indicate.
+che restringono ulteriormente ai **giorni pari o dispari del mese** (numero
+di calendario 1-31 di quel giorno, non la settimana) — confermato da fonti
+ufficiali Alia/Comune di Firenze: è lo schema tipico "un martedì sì, uno no"
+usato per lo spazzamento notturno a Firenze. L'app applica entrambi i filtri
+direttamente: se tutti e 5 i flag settimana-del-mese sono a 1 e non c'è
+restrizione pari/dispari, la pulizia è settimanale; se c'è pari/dispari, si
+applica solo quando quel giorno del mese ha la parità richiesta; altrimenti
+si applica solo nelle occorrenze del mese indicate dai flag 1°-5°.
 
 Il campo `settimanale` del dataset originale non viene usato nel calcolo
 (sembra ridondante rispetto ai flag sopra): è comunque conservato nei dati
