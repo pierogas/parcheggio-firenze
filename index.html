@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#2f6f4f">
+<title>Dove posso parcheggiare? — Pulizia strade Firenze</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <header class="hero">
+    <div class="hero-inner">
+      <div class="hero-badge">🅿️</div>
+      <div>
+        <h1>Dove posso parcheggiare?</h1>
+        <p class="subtitle">Pulizia strade di Firenze in tempo reale — chiedi una via, guarda la mappa, o salva dove hai lasciato l'auto.</p>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="card ask-card">
+      <form id="ask-form" autocomplete="off">
+        <div class="ask-row">
+          <span class="ask-icon">💬</span>
+          <input type="text" id="ask-input" placeholder="Es: posso parcheggiare in via dell'Agnolo adesso?" list="street-list">
+          <datalist id="street-list"></datalist>
+          <button type="submit" class="btn btn-primary">Chiedi</button>
+        </div>
+      </form>
+      <div class="quick-actions">
+        <button id="btn-now" type="button" class="chip">🕐 Adesso</button>
+        <button id="btn-geo" type="button" class="chip">📍 Consigliami dove parcheggiare</button>
+        <button id="btn-park-here" type="button" class="chip chip-accent">🚗 Ho parcheggiato qui</button>
+        <label class="datetime-label">
+          <span>oppure scegli quando</span>
+          <input type="date" id="when-date">
+          <input type="time" id="when-time">
+        </label>
+      </div>
+    </section>
+
+    <section id="car-panel" class="card car-panel" hidden></section>
+
+    <section id="park-picker" class="card park-picker" hidden></section>
+
+    <section id="answer" class="card answer" hidden></section>
+
+    <section class="card map-card">
+      <div id="map"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Dati: <em>Pulizia Strade</em>, Comune di Firenze / Alia SpA (open data, licenza CC-BY 4.0 — vedi cartella sorgente). Software puramente informativo: verifica sempre la segnaletica stradale reale, l'orario potrebbe cambiare o non essere aggiornato. Le notifiche funzionano solo mentre l'app/il browser è aperto (anche in background), non è previsto invio push da server.</p>
+  </footer>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
