@@ -563,9 +563,12 @@ function renderCarPanel() {
   else if (permission === 'denied') permHtml = '<span class="notif-status">La sveglia interna funziona comunque; notifiche del browser bloccate</span>';
   else permHtml = '<button type="button" id="btn-enable-notif" class="btn btn-ghost">🔔 Attiva anche notifiche browser</button>';
 
-  const leadOptions = [1, 3, 6, 12, 24, 48].map(h =>
+  const presetHours = [1, 3, 6, 12, 24, 48];
+  const isPreset = presetHours.includes(car.leadHours);
+  const leadOptions = presetHours.map(h =>
     '<option value="' + h + '"' + (car.leadHours === h ? ' selected' : '') + '>' +
-    (h === 24 ? 'il giorno prima (24h)' : h + ' ore prima') + '</option>').join('');
+    (h === 24 ? 'il giorno prima (24h)' : h + ' ore prima') + '</option>').join('') +
+    '<option value="custom"' + (isPreset ? '' : ' selected') + '>personalizza…</option>';
 
   carPanelEl.hidden = false;
   carPanelEl.innerHTML =
@@ -579,6 +582,9 @@ function renderCarPanel() {
     '</div>' +
     '<div class="car-controls">' +
       '<label>⏰ Sveglia <select id="lead-select">' + leadOptions + '</select></label>' +
+      '<label id="lead-custom-wrap" style="' + (isPreset ? 'display:none' : '') + '">' +
+        '<input type="number" id="lead-custom" min="0.5" max="240" step="0.5" value="' + (isPreset ? '' : car.leadHours) + '" placeholder="ore"> ore prima' +
+      '</label>' +
       '<button type="button" id="btn-test-alarm" class="btn btn-ghost">🔔 Prova la sveglia</button>' +
       permHtml +
       '<button type="button" id="btn-clear-car" class="btn btn-danger">Ho spostato l\'auto</button>' +
@@ -586,16 +592,32 @@ function renderCarPanel() {
     '<p class="detail" style="margin-top:10px">La sveglia suona qui nell\'app quando è il momento (tienila aperta, anche in un\'altra scheda o come app installata): non serve il permesso di notifica del browser.</p>' +
     '<div class="car-controls" id="push-controls"><span class="notif-status">Controllo stato push…</span></div>';
 
-  const leadSelect = document.getElementById('lead-select');
-  leadSelect.addEventListener('change', () => {
+  function applyLeadHours(hours) {
     const c = getParkedCar();
-    if (!c) return;
-    c.leadHours = parseInt(leadSelect.value, 10);
+    if (!c || !hours || hours <= 0) return;
+    c.leadHours = hours;
     c.lastNotifiedStart = null;
     c.dismissedForStart = null;
     saveParkedCar(c);
     checkCarReminder();
     syncPushCarInfo(c);
+  }
+
+  const leadSelect = document.getElementById('lead-select');
+  const customWrap = document.getElementById('lead-custom-wrap');
+  const customInput = document.getElementById('lead-custom');
+  leadSelect.addEventListener('change', () => {
+    if (leadSelect.value === 'custom') {
+      customWrap.style.display = '';
+      customInput.focus();
+      if (customInput.value) applyLeadHours(parseFloat(customInput.value));
+    } else {
+      customWrap.style.display = 'none';
+      applyLeadHours(parseInt(leadSelect.value, 10));
+    }
+  });
+  customInput.addEventListener('change', () => {
+    applyLeadHours(parseFloat(customInput.value));
   });
 
   document.getElementById('btn-test-alarm').addEventListener('click', () => {
