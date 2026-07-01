@@ -1,14 +1,12 @@
 /* Dove posso parcheggiare a Firenze — logica app
    Dati: SWEEPING_RECORDS / STREET_NAMES da data.js (generato da convert_kml.pl)
+   Calcolo pulizia/date: logic.js (condiviso con lo script push di GitHub Actions)
 */
 
-const DAY_CODE_TO_JS = { DO: 0, LU: 1, MA: 2, ME: 3, GI: 4, VE: 5, SA: 6 };
-const DAY_NAME = {
-  DO: 'domenica', LU: 'lunedì', MA: 'martedì', ME: 'mercoledì',
-  GI: 'giovedì', VE: 'venerdì', SA: 'sabato'
-};
-const ORDINAL = ['1°', '2°', '3°', '4°', '5°'];
 const CAR_STORAGE_KEY = 'parcheggioFirenze.parkedCar';
+const DEVICE_ID_KEY = 'parcheggioFirenze.deviceId';
+const PUSH_WORKER_URL = 'https://parcheggio-firenze-push.rumpietro.workers.dev';
+const VAPID_PUBLIC_KEY = 'BNYrsw95XgfZPyEe2nqn8nNCFHjWMr3xFIIdn-0QvIGBy7bJPowLno1_cgycsvGCZgL9aaOPwuIjy1MWDq_v0tY';
 
 // ---------- Normalizzazione testo (accenti, maiuscole, punteggiatura) ----------
 function normalize(str) {
@@ -97,126 +95,16 @@ function parseWhenFromText(text, base) {
   return d;
 }
 
-// ---------- Calcolo regole di pulizia ----------
-function ruleMatchesDate(rule, date) {
-  if (DAY_CODE_TO_JS[rule.day] !== date.getDay()) return false;
-  const occ = Math.ceil(date.getDate() / 7); // 1..5, quale occorrenza del giorno settimana nel mese
-  const weekFlags = [rule.w1, rule.w2, rule.w3, rule.w4, rule.w5];
-  if (weekFlags[occ - 1] !== 1) return false;
-  const dayOfMonthEven = date.getDate() % 2 === 0;
-  if (rule.pari === 1 && rule.dispari === 0) {
-    if (!dayOfMonthEven) return false;
-  } else if (rule.dispari === 1 && rule.pari === 0) {
-    if (dayOfMonthEven) return false;
-  }
-  return true;
-}
-
-function timeToMinutes(t) {
-  const [h, m] = t.split(':').map(Number);
-  return h * 60 + m;
-}
-
-function atTime(date, hhmm) {
-  const [h, m] = hhmm.split(':').map(Number);
-  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate(), h, m, 0, 0);
-  return d;
-}
-
-function findNextOccurrence(rule, fromDate) {
-  for (let i = 1; i <= 60; i++) {
-    const cand = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate() + i);
-    if (ruleMatchesDate(rule, cand)) {
-      return { start: atTime(cand, rule.s), end: atTime(cand, rule.e) };
-    }
-  }
-  return null;
-}
-
-function getRuleInfo(rule, refDate) {
-  const todayMatches = ruleMatchesDate(rule, refDate);
-  const nowMin = refDate.getHours() * 60 + refDate.getMinutes();
-  const startMin = timeToMinutes(rule.s);
-  const endMin = timeToMinutes(rule.e);
-
-  if (todayMatches) {
-    if (nowMin < startMin) {
-      return { status: 'today-soon', start: atTime(refDate, rule.s), end: atTime(refDate, rule.e) };
-    }
-    if (nowMin >= startMin && nowMin < endMin) {
-      return { status: 'busy', start: atTime(refDate, rule.s), end: atTime(refDate, rule.e) };
-    }
-  }
-  const next = findNextOccurrence(rule, refDate);
-  return { status: 'future', start: next ? next.start : null, end: next ? next.end : null };
-}
-
-function describeFrequency(rule) {
-  const dayName = DAY_NAME[rule.day] || rule.day;
-  const flags = [rule.w1, rule.w2, rule.w3, rule.w4, rule.w5];
-  const allWeeks = flags.every(f => f === 1);
-  let base;
-  if (allWeeks) {
-    base = 'ogni ' + capitalize(dayName);
-  } else {
-    const occ = flags.map((f, i) => f === 1 ? ORDINAL[i] : null).filter(Boolean);
-    base = (occ.length ? occ.join(' e ') : '—') + ' ' + capitalize(dayName) + ' del mese';
-  }
-  if (rule.pari === 1 && rule.dispari === 0) base += ', nei giorni pari del mese';
-  if (rule.dispari === 1 && rule.pari === 0) base += ', nei giorni dispari del mese';
-  return base + ', ore ' + rule.s + '–' + rule.e + (rule.nott === 1 ? ' (notturna)' : '');
-}
-
-function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
-
-function fmtDateTime(d) {
-  if (!d) return '';
-  return d.toLocaleDateString('it-IT', { weekday: 'long', day: '2-digit', month: 'long' }) +
-    ' alle ' + d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
-}
-
-function fmtTime(d) {
-  return d ? d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) : '?';
-}
-
 function formatDistance(meters) {
   if (meters < 1000) return Math.round(meters / 10) * 10 + ' m';
   return (meters / 1000).toFixed(1).replace('.0', '') + ' km';
 }
 
 // ---------- Raggruppamento record per segmento ----------
+// ruleMatchesDate, findNextOccurrence, getRuleInfo, describeFrequency,
+// fmtDateTime, fmtTime, groupSegments, evaluateSegment: vedi logic.js
 function recordsForStreet(via) {
   return SWEEPING_RECORDS.filter(r => r.via === via);
-}
-
-function groupSegments(records) {
-  const groups = new Map();
-  for (const r of records) {
-    const key = r.via + '||' + r.tr;
-    if (!groups.has(key)) groups.set(key, { via: r.via, tr: r.tr, rules: [] });
-    groups.get(key).rules.push(r);
-  }
-  return Array.from(groups.values());
-}
-
-function evaluateSegment(segment, refDate) {
-  const infos = segment.rules.map(r => ({ rule: r, info: getRuleInfo(r, refDate) }));
-  let status = 'free';
-  if (infos.some(x => x.info.status === 'busy')) status = 'busy';
-  else if (infos.some(x => x.info.status === 'today-soon')) status = 'soon';
-
-  let nextInfo = null;
-  for (const x of infos) {
-    if (x.info.status === 'busy' || x.info.status === 'today-soon') {
-      if (!nextInfo || x.info.start < nextInfo.start) nextInfo = x.info;
-    }
-  }
-  if (!nextInfo) {
-    for (const x of infos) {
-      if (x.info.start && (!nextInfo || x.info.start < nextInfo.start)) nextInfo = x.info;
-    }
-  }
-  return { status, infos, nextInfo };
 }
 
 function statusText(seg) {
@@ -278,10 +166,6 @@ function segmentPopupHtml(seg) {
   const title = seg.via + (seg.tr ? ' — ' + titleCase(seg.tr) : '');
   const lines = seg.rules.map(r => describeFrequency(r)).join('<br>');
   return '<strong>' + escapeHtml(title) + '</strong><br>' + lines;
-}
-
-function titleCase(s) {
-  return s.toLowerCase().replace(/(^|\s)([a-zà-ú])/g, (m, sp, c) => sp + c.toUpperCase());
 }
 
 function escapeHtml(s) {
@@ -461,6 +345,7 @@ function clearParkedCar() {
 }
 
 const parkPickerEl = document.getElementById('park-picker');
+const manualParkEl = document.getElementById('manual-park');
 const carPanelEl = document.getElementById('car-panel');
 
 function handleParkHere() {
@@ -506,9 +391,68 @@ function showParkPicker(candidates, lat, lon) {
   });
 }
 
+function showManualParkForm() {
+  parkPickerEl.hidden = true;
+  parkPickerEl.innerHTML = '';
+  manualParkEl.hidden = false;
+  manualParkEl.innerHTML =
+    '<h2>✏️ Scegli dove hai parcheggiato</h2>' +
+    '<p class="answer-lead">Utile se hai dimenticato di segnarlo appena sceso dall\'auto: cerca la via.</p>' +
+    '<div class="ask-row">' +
+      '<span class="ask-icon">🔎</span>' +
+      '<input type="text" id="manual-park-input" placeholder="Es: via dell\'Agnolo" list="street-list">' +
+      '<button type="button" id="manual-park-search" class="btn btn-primary">Cerca</button>' +
+    '</div>';
+  manualParkEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  const input = document.getElementById('manual-park-input');
+  const runSearch = () => {
+    const text = input.value.trim();
+    if (!text) return;
+    const matches = findStreetMatches(text);
+    if (!matches.length) {
+      manualParkEl.innerHTML += '<p class="no-result">Nessuna via trovata per "' + escapeHtml(text) + '".</p>';
+      return;
+    }
+    const via = matches[0];
+    const segments = groupSegments(recordsForStreet(via));
+    if (!segments.length) {
+      manualParkEl.innerHTML += '<p class="no-result">"' + escapeHtml(titleCase(via)) + '" non ha regole di pulizia nel dataset.</p>';
+      return;
+    }
+    if (segments.length === 1) {
+      confirmParkedHere(segments[0], null, null);
+    } else {
+      showManualSegmentPicker(via, segments);
+    }
+  };
+  document.getElementById('manual-park-search').addEventListener('click', runSearch);
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); runSearch(); } });
+}
+
+function showManualSegmentPicker(via, segments) {
+  let html = '<h2>✏️ Quale tratto di ' + escapeHtml(titleCase(via)) + '?</h2>';
+  html += '<p class="answer-lead">Questa via ha più tratti con regole diverse: scegli quello giusto.</p>';
+  html += '<div class="pick-list">';
+  segments.forEach((seg, i) => {
+    const title = seg.tr ? titleCase(seg.tr) : 'intera via';
+    html += '<div class="pick-option" data-idx="' + i + '"><span>' + escapeHtml(title) + '</span></div>';
+  });
+  html += '</div>';
+  manualParkEl.innerHTML = html;
+  manualParkEl.querySelectorAll('.pick-option').forEach(el => {
+    el.addEventListener('click', () => {
+      const idx = parseInt(el.getAttribute('data-idx'), 10);
+      confirmParkedHere(segments[idx], null, null);
+    });
+  });
+}
+
 function confirmParkedHere(seg, lat, lon) {
   parkPickerEl.hidden = true;
   parkPickerEl.innerHTML = '';
+  manualParkEl.hidden = true;
+  manualParkEl.innerHTML = '';
   const existing = getParkedCar();
   const car = {
     via: seg.via, tr: seg.tr, lat, lon,
@@ -521,8 +465,86 @@ function confirmParkedHere(seg, lat, lon) {
   saveParkedCar(car);
   renderCarPanel();
   checkCarReminder();
+  syncPushCarInfo(car);
   const segEval = Object.assign({}, seg, evaluateSegment(seg, new Date()));
   drawSegmentsAndFit([segEval]);
+}
+
+// ---------- Push reale (arriva anche ad app/browser chiuso) ----------
+function getDeviceId() {
+  let id = localStorage.getItem(DEVICE_ID_KEY);
+  if (!id) {
+    id = (crypto.randomUUID ? crypto.randomUUID() : 'id-' + Math.random().toString(36).slice(2) + Date.now());
+    localStorage.setItem(DEVICE_ID_KEY, id);
+  }
+  return id;
+}
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; i++) outputArray[i] = rawData.charCodeAt(i);
+  return outputArray;
+}
+
+function pushSupported() {
+  return 'serviceWorker' in navigator && 'PushManager' in window;
+}
+
+async function getExistingPushSubscription() {
+  if (!pushSupported()) return null;
+  const reg = await navigator.serviceWorker.ready;
+  return reg.pushManager.getSubscription();
+}
+
+async function sendSubscriptionToWorker(sub, car) {
+  await fetch(PUSH_WORKER_URL + '/subscribe', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      deviceId: getDeviceId(),
+      subscription: sub.toJSON(),
+      via: car.via, tr: car.tr, leadHours: car.leadHours
+    })
+  }).catch(() => {});
+}
+
+async function enablePushForCar(car) {
+  if (!pushSupported()) {
+    alert('Le notifiche push non sono supportate da questo browser.');
+    return false;
+  }
+  if (Notification.permission !== 'granted') {
+    const perm = await Notification.requestPermission();
+    if (perm !== 'granted') return false;
+  }
+  const reg = await navigator.serviceWorker.ready;
+  let sub = await reg.pushManager.getSubscription();
+  if (!sub) {
+    sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+    });
+  }
+  await sendSubscriptionToWorker(sub, car);
+  return true;
+}
+
+async function syncPushCarInfo(car) {
+  const sub = await getExistingPushSubscription();
+  if (!sub) return;
+  await sendSubscriptionToWorker(sub, car);
+}
+
+async function disablePushRecord() {
+  try {
+    await fetch(PUSH_WORKER_URL + '/unsubscribe', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ deviceId: getDeviceId() })
+    });
+  } catch (e) {}
 }
 
 function renderCarPanel() {
@@ -561,7 +583,8 @@ function renderCarPanel() {
       permHtml +
       '<button type="button" id="btn-clear-car" class="btn btn-danger">Ho spostato l\'auto</button>' +
     '</div>' +
-    '<p class="detail" style="margin-top:10px">La sveglia suona qui nell\'app quando è il momento (tienila aperta, anche in un\'altra scheda o come app installata): non serve il permesso di notifica del browser.</p>';
+    '<p class="detail" style="margin-top:10px">La sveglia suona qui nell\'app quando è il momento (tienila aperta, anche in un\'altra scheda o come app installata): non serve il permesso di notifica del browser.</p>' +
+    '<div class="car-controls" id="push-controls"><span class="notif-status">Controllo stato push…</span></div>';
 
   const leadSelect = document.getElementById('lead-select');
   leadSelect.addEventListener('change', () => {
@@ -572,6 +595,7 @@ function renderCarPanel() {
     c.dismissedForStart = null;
     saveParkedCar(c);
     checkCarReminder();
+    syncPushCarInfo(c);
   });
 
   document.getElementById('btn-test-alarm').addEventListener('click', () => {
@@ -588,10 +612,43 @@ function renderCarPanel() {
   }
 
   document.getElementById('btn-clear-car').addEventListener('click', () => {
+    disablePushRecord();
     clearParkedCar();
     closeAlarmOverlay();
     renderCarPanel();
   });
+
+  renderPushControls(car);
+}
+
+async function renderPushControls(car) {
+  const el = document.getElementById('push-controls');
+  if (!el) return;
+  if (!pushSupported()) {
+    el.innerHTML = '<span class="notif-status">Push non supportato da questo browser: resta valida la sveglia interna.</span>';
+    return;
+  }
+  const sub = await getExistingPushSubscription();
+  if (sub) {
+    el.innerHTML = '<span class="notif-status">🌍 Push attivo: arriva un avviso anche se chiudi l\'app o spegni il telefono</span>' +
+      '<button type="button" id="btn-disable-push" class="btn btn-ghost">Disattiva</button>';
+    document.getElementById('btn-disable-push').addEventListener('click', async () => {
+      await disablePushRecord();
+      try { await sub.unsubscribe(); } catch (e) {}
+      renderPushControls(getParkedCar());
+    });
+  } else {
+    el.innerHTML = '<button type="button" id="btn-enable-push" class="btn btn-primary">🌍 Attiva push anche ad app chiusa</button>';
+    document.getElementById('btn-enable-push').addEventListener('click', async () => {
+      const c = getParkedCar();
+      if (!c) return;
+      const ok = await enablePushForCar(c);
+      el.innerHTML = ok
+        ? '<span class="notif-status">🌍 Push attivato!</span>'
+        : '<span class="notif-status">Permesso negato: la sveglia interna resta comunque attiva.</span>';
+      renderPushControls(getParkedCar());
+    });
+  }
 }
 
 // ---------- Sveglia (suono + overlay a schermo intero) ----------
@@ -781,4 +838,5 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   document.getElementById('btn-park-here').addEventListener('click', handleParkHere);
+  document.getElementById('btn-park-manual').addEventListener('click', showManualParkForm);
 });

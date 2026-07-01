@@ -37,6 +37,7 @@
         <button id="btn-now" type="button" class="chip">🕐 Adesso</button>
         <button id="btn-geo" type="button" class="chip">📍 Consigliami dove parcheggiare</button>
         <button id="btn-park-here" type="button" class="chip chip-accent">🚗 Ho parcheggiato qui</button>
+        <button id="btn-park-manual" type="button" class="chip">✏️ Scegli via a mano</button>
         <label class="datetime-label">
           <span>oppure scegli quando</span>
           <input type="date" id="when-date">
@@ -48,6 +49,8 @@
     <section id="car-panel" class="card car-panel" hidden></section>
 
     <section id="park-picker" class="card park-picker" hidden></section>
+
+    <section id="manual-park" class="card park-picker" hidden></section>
 
     <section id="answer" class="card answer" hidden></section>
 
@@ -63,6 +66,7 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="data.js"></script>
+<script src="logic.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

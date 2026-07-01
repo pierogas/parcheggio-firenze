@@ -1,4 +1,4 @@
-const CACHE_NAME = 'parcheggio-firenze-v2';
+const CACHE_NAME = 'parcheggio-firenze-v3';
 const SHELL_FILES = [
   './',
   './index.html',
@@ -41,6 +41,21 @@ self.addEventListener('fetch', (event) => {
         return res;
       })
       .catch(() => caches.match(event.request))
+  );
+});
+
+// Notifica push reale: arriva anche ad app chiusa (inviata dal workflow
+// GitHub Actions tramite il Worker Cloudflare, protocollo Web Push standard).
+self.addEventListener('push', (event) => {
+  let data = { title: '🧹 Pulizia strade in arrivo', body: 'Controlla la tua auto parcheggiata.' };
+  try { if (event.data) data = event.data.json(); } catch (e) {}
+  event.waitUntil(
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      icon: 'icon.svg',
+      badge: 'icon.svg',
+      tag: 'parcheggio-firenze-reminder'
+    })
   );
 });
 

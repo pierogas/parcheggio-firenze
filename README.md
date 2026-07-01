@@ -38,13 +38,49 @@ pure una notifica di sistema tramite il Service Worker — utile se hai la
 scheda in un'altra finestra, ma non è necessaria: la sveglia interna
 funziona comunque senza quel permesso.
 
-⚠️ **Limite onesto**: essendo un'app puramente client-side senza server,
-la sveglia suona solo mentre il browser (o l'app installata) è aperto e in
-esecuzione, anche in background/minimizzato — non se il PC/telefono è
-spento o il browser completamente chiuso. In quel caso, appena riapri l'app
-controlla subito se un promemoria era nel frattempo scaduto e te lo mostra.
-Un vero push "a processo chiuso" richiederebbe un server sempre attivo
-(Node.js + Web Push/VAPID) che al momento non è installato su questo PC.
+⚠️ **Limite della sveglia interna**: suona solo mentre il browser (o l'app
+installata) è aperto e in esecuzione, anche in background/minimizzato — non
+se il telefono è spento o il browser completamente chiuso. Per quel caso
+c'è il push reale, vedi sotto.
+
+## Push reale (arriva anche ad app chiusa)
+
+Nel pannello "La mia auto" c'è anche **🌍 Attiva push anche ad app chiusa**:
+usa il protocollo standard Web Push, quindi il promemoria arriva come vera
+notifica di sistema anche se il browser è completamente chiuso o il telefono
+è spento e poi riacceso.
+
+Architettura (tutta gratuita, nessun server sempre-acceso da mantenere):
+
+- **Client** (`app.js`): quando attivi il push, il browser crea una
+  `PushSubscription` (protetta dalle chiavi VAPID) e la invia a un
+  **Cloudflare Worker** (`worker/`), insieme a via/tratto e ore di preavviso.
+- **Cloudflare Worker + KV** (`worker/src/index.js`): un piccolo endpoint
+  serverless gratuito che salva le iscrizioni push in un database key-value
+  (Cloudflare KV). Non contiene la logica di quando avvisare: è solo lo
+  "storage" condiviso tra il telefono e il processo che invia i push.
+- **GitHub Actions** (`.github/workflows/send-reminders.yml`): uno scheduled
+  workflow gratuito che gira ogni 15 minuti, legge le iscrizioni dal Worker,
+  usa la stessa logica di calcolo di `app.js` (condivisa in `logic.js`) per
+  capire a chi serve un avviso adesso, e invia il push tramite la libreria
+  `web-push` con le chiavi VAPID (salvate come secret del repository, mai
+  esposte pubblicamente — solo la chiave pubblica VAPID è nel client, quella
+  privata resta solo nei secret di GitHub Actions).
+
+Se disattivi il push, il record lato server viene cancellato ma la sveglia
+interna dell'app continua a funzionare normalmente.
+
+### Rigenerare/aggiornare l'infrastruttura push
+
+- **Chiavi VAPID**: generate una tantum con `npx web-push generate-vapid-keys`.
+- **Worker**: da `worker/`, `npm install` poi `npx wrangler deploy` (richiede
+  login con `npx wrangler login`).
+- **Secret del Worker**: `npx wrangler secret put WORKER_SHARED_SECRET`
+  (deve combaciare con il secret `WORKER_SHARED_SECRET` su GitHub Actions).
+- **Secret di GitHub Actions**: `gh secret set NOME --body "valore"` per
+  `WORKER_URL`, `WORKER_SHARED_SECRET`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`.
+- Il workflow si può anche lanciare a mano da GitHub → Actions → "Invia
+  promemoria push spazzamento" → "Run workflow", utile per testare.
 
 ## Installarla come app (PWA)
 
