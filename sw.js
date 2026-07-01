@@ -1,12 +1,16 @@
-const CACHE_NAME = 'parcheggio-firenze-v3';
+const CACHE_NAME = 'parcheggio-firenze-v4';
 const SHELL_FILES = [
   './',
   './index.html',
   './style.css',
   './app.js',
+  './logic.js',
   './data.js',
   './manifest.json',
-  './icon.svg'
+  './icon.svg',
+  './icon-192.png',
+  './icon-512.png',
+  './badge-96.png'
 ];
 
 self.addEventListener('install', (event) => {
@@ -52,8 +56,8 @@ self.addEventListener('push', (event) => {
   event.waitUntil(
     self.registration.showNotification(data.title, {
       body: data.body,
-      icon: 'icon.svg',
-      badge: 'icon.svg',
+      icon: 'icon-192.png',
+      badge: 'badge-96.png',
       tag: 'parcheggio-firenze-reminder'
     })
   );

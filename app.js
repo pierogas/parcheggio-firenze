@@ -751,9 +751,9 @@ async function fireBrowserNotification(title, body) {
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
   if ('serviceWorker' in navigator) {
     const reg = await navigator.serviceWorker.getRegistration();
-    if (reg) { reg.showNotification(title, { body, icon: 'icon.svg' }); return; }
+    if (reg) { reg.showNotification(title, { body, icon: 'icon-192.png' }); return; }
   }
-  new Notification(title, { body, icon: 'icon.svg' });
+  new Notification(title, { body, icon: 'icon-192.png' });
 }
 
 function checkCarReminder() {
