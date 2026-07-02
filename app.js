@@ -181,7 +181,7 @@ function segmentCardHtml(seg, opts) {
   const title = (opts.showVia ? titleCase(seg.via) + (seg.tr ? ' — ' : '') : '') + (seg.tr ? titleCase(seg.tr) : (opts.showVia ? '' : 'intera via'));
   const detail = seg.rules.map(r => describeFrequency(r)).join(' • ');
   const dist = opts.distance != null ? '<span class="distance">📍 ' + formatDistance(opts.distance) + '</span>' : '';
-  return '<div class="segment-card' + (opts.recommended ? ' recommended' : '') + '" data-key="' + escapeHtml(seg.via + '||' + seg.tr) + '">' +
+  return '<div class="segment-card ' + cls + (opts.recommended ? ' recommended' : '') + '" data-key="' + escapeHtml(seg.via + '||' + seg.tr) + '">' +
     '<div class="status-dot ' + cls + '"></div>' +
     '<div class="segment-info">' +
     '<div class="title-row"><div class="title">' + escapeHtml(title || 'intera via') + '</div>' + dist + '</div>' +
