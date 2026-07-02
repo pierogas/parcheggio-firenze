@@ -51,13 +51,12 @@ self.addEventListener('fetch', (event) => {
 // Notifica push reale: arriva anche ad app chiusa (inviata dal workflow
 // GitHub Actions tramite il Worker Cloudflare, protocollo Web Push standard).
 self.addEventListener('push', (event) => {
-  let data = { title: '🧹 Pulizia strade in arrivo', body: 'Controlla la tua auto parcheggiata.' };
+  let data = { title: 'Devi spostare la macchina!', body: 'Controlla la tua auto parcheggiata.' };
   try { if (event.data) data = event.data.json(); } catch (e) {}
   event.waitUntil(
     self.registration.showNotification(data.title, {
       body: data.body,
       icon: 'icon-192.png',
-      badge: 'badge-96.png',
       tag: 'parcheggio-firenze-reminder'
     })
   );

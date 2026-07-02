@@ -49,8 +49,8 @@ async function main() {
     if (nowMs >= reminderTime && nowMs < startMs && record.lastNotifiedStart !== startMs) {
       const title = titleCase(record.via) + (record.tr ? ' — ' + titleCase(record.tr) : '');
       const payload = JSON.stringify({
-        title: '🧹 Pulizia strade in arrivo',
-        body: `Hai parcheggiato in ${title}: pulizia prevista ${fmtDateTime(evald.nextInfo.start)}. Sposta l'auto!`
+        title: 'Devi spostare la macchina!',
+        body: `Hai parcheggiato in ${title}: pulizia prevista ${fmtDateTime(evald.nextInfo.start)}.`
       });
       try {
         await webpush.sendNotification(record.subscription, payload);

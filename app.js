@@ -720,8 +720,8 @@ function showAlarmOverlay(car, info) {
   overlay.innerHTML =
     '<div class="alarm-card">' +
       '<div class="alarm-emoji">⏰</div>' +
-      '<h2>' + (info.testMode ? 'Prova sveglia' : 'Sposta l\'auto!') + '</h2>' +
-      '<p>' + escapeHtml(title) + (when ? '<br>Pulizia prevista ' + escapeHtml(when) : '') + '</p>' +
+      '<h2>' + (info.testMode ? 'Prova sveglia' : 'Devi spostare la macchina!') + '</h2>' +
+      '<p>Hai parcheggiato in ' + escapeHtml(title) + (when ? '<br>Pulizia prevista ' + escapeHtml(when) : '') + '</p>' +
       '<div class="alarm-buttons">' +
         (info.testMode
           ? '<button type="button" class="btn btn-primary" id="alarm-ok">Ok</button>'
@@ -781,7 +781,7 @@ function checkCarReminder() {
   if (now >= reminderTime && now < startMs) {
     const title = titleCase(car.via) + (car.tr ? ' — ' + titleCase(car.tr) : '');
     if (car.lastNotifiedStart !== startMs) {
-      fireBrowserNotification('🧹 Pulizia strade in arrivo', 'Hai parcheggiato in ' + title + ': pulizia prevista ' + fmtDateTime(evald.nextInfo.start) + '. Sposta l\'auto!');
+      fireBrowserNotification('Devi spostare la macchina!', 'Hai parcheggiato in ' + title + ': pulizia prevista ' + fmtDateTime(evald.nextInfo.start) + '.');
       car.lastNotifiedStart = startMs;
       saveParkedCar(car);
     }
