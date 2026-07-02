@@ -24,8 +24,9 @@ oggi, 🔴 pulizia in corso ora.
 
 ## Sveglia "sposta l'auto"
 
-Dal pannello **La mia auto** scegli quanto tempo prima vuoi essere avvisato
-(1h, 3h, 6h, 12h, 24h = "il giorno prima", 48h). Quando arriva il momento,
+Dal pannello **La mia auto** scegli quanto tempo prima vuoi essere avvisato:
+preset rapidi (1h, 3h, 6h, 12h, 24h = "il giorno prima", 48h) oppure
+**personalizza…** per impostare ore e minuti esatti (es. 2h 45min). Quando arriva il momento,
 l'app suona un allarme (beep generato via Web Audio, non serve un file audio)
 e mostra un avviso a schermo intero con tre scelte: **rimanda 30 minuti**,
 **ho spostato l'auto** (cancella il promemoria), oppure **chiudi** (l'allarme
@@ -89,6 +90,17 @@ Chrome/Edge desktop o Android puoi usare "Installa app" / "Aggiungi a
 schermata Home" nel menu del browser per aprirla come un'app a sé stante,
 con funzionamento offline per la parte già visitata (i dati sono comunque
 tutti incorporati in `data.js`, quindi funziona offline fin da subito).
+
+L'icona (app, favicon, notifiche) parte dal logo in `Downloads/Logo app.png`
+e `Downloads/Badge.png`: `icon-192.png`/`icon-512.png` sono il logo così
+com'è, le versioni `icon-maskable-*.png` hanno un padding di sicurezza extra
+su sfondo viola pieno (necessario perché Android ritaglia le icone in
+cerchio/squircle), `apple-touch-icon.png` è la versione 180×180 a sfondo
+pieno per iOS, e `badge-96.png` è una sagoma monocroma (ricavata riempiendo
+le zone interne chiuse del logo) usata per il badge delle notifiche Android,
+che per specifica di sistema deve essere a un solo colore. Per rigenerarle
+dopo aver cambiato il logo, serve Node.js + il pacchetto `sharp` (script
+usato una tantum, non incluso nel repo).
 
 ### Avviare un server locale
 

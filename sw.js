@@ -1,4 +1,4 @@
-const CACHE_NAME = 'parcheggio-firenze-v4';
+const CACHE_NAME = 'parcheggio-firenze-v5';
 const SHELL_FILES = [
   './',
   './index.html',
@@ -7,9 +7,9 @@ const SHELL_FILES = [
   './logic.js',
   './data.js',
   './manifest.json',
-  './icon.svg',
   './icon-192.png',
   './icon-512.png',
+  './apple-touch-icon.png',
   './badge-96.png'
 ];
 

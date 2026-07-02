@@ -5,15 +5,15 @@
   --red-bg: #fdeaea;
   --amber: #b3720a;
   --amber-bg: #fdf2e0;
-  --ink: #1b1f1c;
-  --muted: #6b7268;
-  --bg: #f2f5f1;
+  --ink: #201a22;
+  --muted: #746b78;
+  --bg: #f5f1f6;
   --card: #ffffff;
-  --border: #e5e9e3;
-  --accent: #2f6f4f;
-  --accent-dark: #21503a;
+  --border: #e7dfea;
+  --accent: #752786;
+  --accent-dark: #45174f;
   --radius: 16px;
-  --shadow: 0 1px 2px rgba(20, 30, 20, 0.04), 0 8px 24px rgba(20, 30, 20, 0.06);
+  --shadow: 0 1px 2px rgba(30, 15, 35, 0.05), 0 8px 24px rgba(30, 15, 35, 0.08);
 }
 
 * { box-sizing: border-box; }

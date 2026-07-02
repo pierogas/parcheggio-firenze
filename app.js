@@ -583,7 +583,8 @@ function renderCarPanel() {
     '<div class="car-controls">' +
       '<label>⏰ Sveglia <select id="lead-select">' + leadOptions + '</select></label>' +
       '<label id="lead-custom-wrap" style="' + (isPreset ? 'display:none' : '') + '">' +
-        '<input type="number" id="lead-custom" min="0.5" max="240" step="0.5" value="' + (isPreset ? '' : car.leadHours) + '" placeholder="ore"> ore prima' +
+        '<input type="number" id="lead-custom-h" min="0" max="240" step="1" value="' + (isPreset ? '' : Math.floor(car.leadHours)) + '" placeholder="0"> h' +
+        '<input type="number" id="lead-custom-m" min="0" max="59" step="5" value="' + (isPreset ? '' : Math.round((car.leadHours % 1) * 60)) + '" placeholder="0"> min prima' +
       '</label>' +
       '<button type="button" id="btn-test-alarm" class="btn btn-ghost">🔔 Prova la sveglia</button>' +
       permHtml +
@@ -605,20 +606,25 @@ function renderCarPanel() {
 
   const leadSelect = document.getElementById('lead-select');
   const customWrap = document.getElementById('lead-custom-wrap');
-  const customInput = document.getElementById('lead-custom');
+  const customH = document.getElementById('lead-custom-h');
+  const customM = document.getElementById('lead-custom-m');
+  function applyCustomFromInputs() {
+    const h = parseInt(customH.value, 10) || 0;
+    const m = parseInt(customM.value, 10) || 0;
+    applyLeadHours(h + m / 60);
+  }
   leadSelect.addEventListener('change', () => {
     if (leadSelect.value === 'custom') {
       customWrap.style.display = '';
-      customInput.focus();
-      if (customInput.value) applyLeadHours(parseFloat(customInput.value));
+      customH.focus();
+      if (customH.value || customM.value) applyCustomFromInputs();
     } else {
       customWrap.style.display = 'none';
       applyLeadHours(parseInt(leadSelect.value, 10));
     }
   });
-  customInput.addEventListener('change', () => {
-    applyLeadHours(parseFloat(customInput.value));
-  });
+  customH.addEventListener('change', applyCustomFromInputs);
+  customM.addEventListener('change', applyCustomFromInputs);
 
   document.getElementById('btn-test-alarm').addEventListener('click', () => {
     unlockAudio();
