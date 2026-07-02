@@ -863,46 +863,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const form = document.getElementById('ask-form');
   const input = document.getElementById('ask-input');
-  const whenDate = document.getElementById('when-date');
-  const whenTime = document.getElementById('when-time');
-
-  function hasCustomWhen() {
-    return !!(whenDate.value || whenTime.value);
-  }
-
-  function currentRefDate() {
-    if (!hasCustomWhen()) return new Date();
-    const now = new Date();
-    const [y, mo, d] = (whenDate.value || now.toISOString().slice(0, 10)).split('-').map(Number);
-    const ref = new Date(y, mo - 1, d);
-    if (whenTime.value) {
-      const [h, mi] = whenTime.value.split(':').map(Number);
-      ref.setHours(h, mi, 0, 0);
-    } else {
-      ref.setHours(now.getHours(), now.getMinutes(), 0, 0);
-    }
-    return ref;
-  }
 
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     const text = input.value.trim();
     if (!text) return;
-    const base = currentRefDate();
-    const refDate = hasCustomWhen() ? base : parseWhenFromText(text, base);
-    runQuery(text, refDate);
-  });
-
-  document.getElementById('btn-now').addEventListener('click', () => {
-    whenDate.value = '';
-    whenTime.value = '';
-    const text = input.value.trim();
-    if (text) {
-      runQuery(text, parseWhenFromText(text, new Date()));
-    } else if (getParkedCar()) {
-      renderCarPanel();
-      checkCarReminder();
-    }
+    runQuery(text, parseWhenFromText(text, new Date()));
   });
 
   document.getElementById('btn-geo').addEventListener('click', () => {
@@ -911,7 +877,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     navigator.geolocation.getCurrentPosition(
-      (pos) => renderNearby(pos.coords.latitude, pos.coords.longitude, currentRefDate()),
+      (pos) => renderNearby(pos.coords.latitude, pos.coords.longitude, new Date()),
       (err) => alert('Impossibile ottenere la posizione: ' + err.message)
     );
   });

@@ -147,51 +147,40 @@ main {
 
 .btn-primary:hover { filter: brightness(1.08); }
 
-.quick-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-  margin-top: 12px;
+/* ---------- Azioni parcheggio (gerarchia) ---------- */
+.parking-actions-label {
+  font-weight: 700;
+  margin-bottom: 12px;
+  font-size: 0.95rem;
 }
 
-.chip {
-  padding: 9px 14px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
+.parking-actions-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.btn-block {
+  width: 100%;
+  padding: 13px 18px;
+  border-radius: 16px;
+  text-align: center;
+}
+
+.btn-secondary {
   background: var(--accent-soft);
-  cursor: pointer;
-  font-size: 0.86rem;
   color: var(--accent-dark);
-  font-weight: 600;
-  transition: background 0.15s ease, transform 0.1s ease;
+  border: 1px solid transparent;
 }
 
-.chip:hover { background: var(--lilac); transform: translateY(-1px); }
+.btn-secondary:hover { background: var(--lilac); }
 
-.chip-accent {
-  background: linear-gradient(135deg, var(--accent), var(--accent-dark));
-  color: white;
-  border-color: transparent;
-  box-shadow: 0 4px 12px rgba(117, 39, 134, 0.3);
-}
-
-.chip-accent:hover { filter: brightness(1.08); }
-
-.datetime-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.82rem;
-  color: var(--muted);
-  margin-left: auto;
-}
-
-.datetime-label input {
-  padding: 7px 9px;
-  border-radius: 8px;
+.parking-actions-buttons .btn-ghost {
+  background: transparent;
   border: 1px solid var(--border);
-  font-size: 0.85rem;
+  color: var(--muted);
+  font-size: 0.88rem;
+  padding: 11px 18px;
 }
 
 /* ---------- Answer / segment cards ---------- */
@@ -534,7 +523,6 @@ footer {
   .ask-row { flex-wrap: wrap; }
   #ask-input { width: 100%; order: 1; }
   .ask-icon { order: 0; }
-  .btn-primary { order: 2; width: 100%; }
-  .datetime-label { margin-left: 0; width: 100%; justify-content: space-between; }
+  .ask-row .btn-primary { order: 2; width: 100%; }
   #map { height: 340px; }
 }

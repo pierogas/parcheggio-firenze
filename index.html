@@ -28,21 +28,19 @@
       <form id="ask-form" autocomplete="off">
         <div class="ask-row">
           <span class="ask-icon">💬</span>
-          <input type="text" id="ask-input" placeholder="Es: posso parcheggiare in via dell'Agnolo adesso?" list="street-list">
+          <input type="text" id="ask-input" placeholder="Inserisci la via dove vuoi parcheggiare" list="street-list">
           <datalist id="street-list"></datalist>
-          <button type="submit" class="btn btn-primary">Chiedi</button>
+          <button type="submit" class="btn btn-primary">Verifica</button>
         </div>
       </form>
-      <div class="quick-actions">
-        <button id="btn-now" type="button" class="chip">🕐 Adesso</button>
-        <button id="btn-geo" type="button" class="chip">📍 Consigliami dove parcheggiare</button>
-        <button id="btn-park-here" type="button" class="chip chip-accent">🚗 Ho parcheggiato qui</button>
-        <button id="btn-park-manual" type="button" class="chip">✏️ Scegli via a mano</button>
-        <label class="datetime-label">
-          <span>oppure scegli quando</span>
-          <input type="date" id="when-date">
-          <input type="time" id="when-time">
-        </label>
+    </section>
+
+    <section class="card parking-actions">
+      <div class="parking-actions-label">🚗 Parcheggio</div>
+      <div class="parking-actions-buttons">
+        <button id="btn-park-here" type="button" class="btn btn-primary btn-block">🚗 Ho parcheggiato qui</button>
+        <button id="btn-geo" type="button" class="btn btn-secondary btn-block">📍 Consigliami dove parcheggiare</button>
+        <button id="btn-park-manual" type="button" class="btn btn-ghost btn-block">✏️ Verifica orari spazzamento di una via</button>
       </div>
     </section>
 
