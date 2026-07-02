@@ -5,3 +5,6 @@ compatibility_date = "2024-01-01"
 [[kv_namespaces]]
 binding = "PARKED_CARS"
 id = "049ca41e555142508f9c51070b695d71"
+
+[triggers]
+crons = ["*/5 * * * *"]

@@ -76,5 +76,28 @@ export default {
     }
 
     return json({ error: 'not found' }, { status: 404 });
+  },
+
+  // Cron Trigger di Cloudflare (affidabile) al posto dello `schedule` di
+  // GitHub Actions (sui piani gratuiti viene ritardato anche di ore):
+  // fa solo da "sveglia" precisa, l'invio vero resta nello script Node
+  // già testato (usa web-push, non compatibile nativamente col runtime Worker).
+  async scheduled(event, env, ctx) {
+    const res = await fetch(
+      'https://api.github.com/repos/pierogas/parcheggio-firenze/actions/workflows/send-reminders.yml/dispatches',
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${env.GITHUB_TOKEN}`,
+          'Accept': 'application/vnd.github+json',
+          'User-Agent': 'parcheggio-firenze-push-worker',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ ref: 'main' })
+      }
+    );
+    if (!res.ok) {
+      console.log('Errore dispatch workflow:', res.status, await res.text());
+    }
   }
 };
