@@ -896,6 +896,13 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-now').addEventListener('click', () => {
     whenDate.value = '';
     whenTime.value = '';
+    const text = input.value.trim();
+    if (text) {
+      runQuery(text, parseWhenFromText(text, new Date()));
+    } else if (getParkedCar()) {
+      renderCarPanel();
+      checkCarReminder();
+    }
   });
 
   document.getElementById('btn-geo').addEventListener('click', () => {
