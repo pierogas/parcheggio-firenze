@@ -489,8 +489,15 @@ function composeLeadHours(parts) {
 }
 
 function swipeStepperHtml(field, value, label) {
+  const [min, max] = SWIPE_FIELD_RANGES[field];
+  const prev = value > min ? value - 1 : '';
+  const next = value < max ? value + 1 : '';
   return '<div class="swipe-stepper" data-field="' + field + '">' +
-    '<div class="swipe-value">' + value + '</div>' +
+    '<div class="swipe-track">' +
+      '<div class="swipe-value swipe-prev">' + prev + '</div>' +
+      '<div class="swipe-value swipe-current">' + value + '</div>' +
+      '<div class="swipe-value swipe-next">' + next + '</div>' +
+    '</div>' +
     '<div class="swipe-label">' + label + '</div>' +
   '</div>';
 }
@@ -499,8 +506,16 @@ function wireSwipeSteppers(container, parts, onChange) {
   container.querySelectorAll('.swipe-stepper').forEach((el) => {
     const field = el.getAttribute('data-field');
     const [min, max] = SWIPE_FIELD_RANGES[field];
-    const valueEl = el.querySelector('.swipe-value');
+    const prevEl = el.querySelector('.swipe-prev');
+    const currentEl = el.querySelector('.swipe-current');
+    const nextEl = el.querySelector('.swipe-next');
     let startY = 0, startVal = 0, dragging = false;
+
+    function render(val) {
+      currentEl.textContent = val;
+      prevEl.textContent = val > min ? val - 1 : '';
+      nextEl.textContent = val < max ? val + 1 : '';
+    }
 
     el.addEventListener('pointerdown', (e) => {
       dragging = true;
@@ -513,13 +528,13 @@ function wireSwipeSteppers(container, parts, onChange) {
       if (!dragging) return;
       const steps = Math.round((startY - e.clientY) / SWIPE_STEP_PX);
       const newVal = Math.max(min, Math.min(max, startVal + steps));
-      valueEl.textContent = newVal;
+      render(newVal);
     });
     function endDrag() {
       if (!dragging) return;
       dragging = false;
       el.classList.remove('dragging');
-      parts[field] = parseInt(valueEl.textContent, 10);
+      parts[field] = parseInt(currentEl.textContent, 10);
       onChange(parts);
     }
     el.addEventListener('pointerup', endDrag);
