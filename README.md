@@ -24,9 +24,10 @@ oggi, 🔴 pulizia in corso ora.
 
 ## Sveglia "sposta l'auto"
 
-Dal pannello **La mia auto** scegli quanto tempo prima vuoi essere avvisato:
-preset rapidi (1h, 3h, 6h, 12h, 24h = "il giorno prima", 48h) oppure
-**personalizza…** per impostare ore e minuti esatti (es. 2h 45min). Quando arriva il momento,
+Dal pannello **La mia auto** scegli quanto tempo prima vuoi essere avvisato
+con tre riquadri **giorni / ore / minuti**: scorri il dito su ciascuno
+(verso l'alto per aumentare, verso il basso per diminuire) per impostare
+il preavviso esatto, es. 1 giorno 6 ore. Quando arriva il momento,
 l'app suona un allarme (beep generato via Web Audio, non serve un file audio)
 e mostra un avviso a schermo intero con tre scelte: **rimanda 30 minuti**,
 **ho spostato l'auto** (cancella il promemoria), oppure **chiudi** (l'allarme

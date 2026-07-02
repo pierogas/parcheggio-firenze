@@ -470,6 +470,63 @@ function confirmParkedHere(seg, lat, lon) {
   drawSegmentsAndFit([segEval]);
 }
 
+// ---------- Selettore sveglia a swipe (giorni / ore / minuti) ----------
+const SWIPE_FIELD_RANGES = { days: [0, 7], hours: [0, 24], minutes: [0, 59] };
+const SWIPE_STEP_PX = 24;
+
+function decomposeLeadHours(hours) {
+  let totalMin = Math.round((hours || 0) * 60);
+  totalMin = Math.max(0, totalMin);
+  return {
+    days: Math.floor(totalMin / 1440),
+    hours: Math.floor((totalMin % 1440) / 60),
+    minutes: totalMin % 60
+  };
+}
+
+function composeLeadHours(parts) {
+  return parts.days * 24 + parts.hours + parts.minutes / 60;
+}
+
+function swipeStepperHtml(field, value, label) {
+  return '<div class="swipe-stepper" data-field="' + field + '">' +
+    '<div class="swipe-value">' + value + '</div>' +
+    '<div class="swipe-label">' + label + '</div>' +
+  '</div>';
+}
+
+function wireSwipeSteppers(container, parts, onChange) {
+  container.querySelectorAll('.swipe-stepper').forEach((el) => {
+    const field = el.getAttribute('data-field');
+    const [min, max] = SWIPE_FIELD_RANGES[field];
+    const valueEl = el.querySelector('.swipe-value');
+    let startY = 0, startVal = 0, dragging = false;
+
+    el.addEventListener('pointerdown', (e) => {
+      dragging = true;
+      startY = e.clientY;
+      startVal = parts[field];
+      el.setPointerCapture(e.pointerId);
+      el.classList.add('dragging');
+    });
+    el.addEventListener('pointermove', (e) => {
+      if (!dragging) return;
+      const steps = Math.round((startY - e.clientY) / SWIPE_STEP_PX);
+      const newVal = Math.max(min, Math.min(max, startVal + steps));
+      valueEl.textContent = newVal;
+    });
+    function endDrag() {
+      if (!dragging) return;
+      dragging = false;
+      el.classList.remove('dragging');
+      parts[field] = parseInt(valueEl.textContent, 10);
+      onChange(parts);
+    }
+    el.addEventListener('pointerup', endDrag);
+    el.addEventListener('pointercancel', endDrag);
+  });
+}
+
 // ---------- Push reale (arriva anche ad app/browser chiuso) ----------
 function getDeviceId() {
   let id = localStorage.getItem(DEVICE_ID_KEY);
@@ -563,12 +620,7 @@ function renderCarPanel() {
   else if (permission === 'denied') permHtml = '<span class="notif-status">La sveglia interna funziona comunque; notifiche del browser bloccate</span>';
   else permHtml = '<button type="button" id="btn-enable-notif" class="btn btn-ghost">🔔 Attiva anche notifiche browser</button>';
 
-  const presetHours = [1, 3, 6, 12, 24, 48];
-  const isPreset = presetHours.includes(car.leadHours);
-  const leadOptions = presetHours.map(h =>
-    '<option value="' + h + '"' + (car.leadHours === h ? ' selected' : '') + '>' +
-    (h === 24 ? 'il giorno prima (24h)' : h + ' ore prima') + '</option>').join('') +
-    '<option value="custom"' + (isPreset ? '' : ' selected') + '>personalizza…</option>';
+  const parts = decomposeLeadHours(car.leadHours);
 
   carPanelEl.hidden = false;
   carPanelEl.innerHTML =
@@ -580,12 +632,16 @@ function renderCarPanel() {
         '<div class="status-text ' + evald.status + '">' + escapeHtml(statusText(Object.assign({}, seg, evald))) + '</div>' +
       '</div>' +
     '</div>' +
+    '<div class="alarm-setter">' +
+      '<div class="alarm-setter-label">⏰ Sveglia</div>' +
+      '<div class="swipe-steppers">' +
+        swipeStepperHtml('days', parts.days, 'giorni') +
+        swipeStepperHtml('hours', parts.hours, 'ore') +
+        swipeStepperHtml('minutes', parts.minutes, 'minuti') +
+      '</div>' +
+      '<div class="alarm-setter-caption">prima dell\'ora dello spazzamento — scorri con il dito su/giù su ogni riquadro</div>' +
+    '</div>' +
     '<div class="car-controls">' +
-      '<label>⏰ Sveglia <select id="lead-select">' + leadOptions + '</select></label>' +
-      '<label id="lead-custom-wrap" style="' + (isPreset ? 'display:none' : '') + '">' +
-        '<input type="number" id="lead-custom-h" min="0" max="240" step="1" value="' + (isPreset ? '' : Math.floor(car.leadHours)) + '" placeholder="0"> h' +
-        '<input type="number" id="lead-custom-m" min="0" max="59" step="5" value="' + (isPreset ? '' : Math.round((car.leadHours % 1) * 60)) + '" placeholder="0"> min prima' +
-      '</label>' +
       '<button type="button" id="btn-test-alarm" class="btn btn-ghost">🔔 Prova la sveglia</button>' +
       permHtml +
       '<button type="button" id="btn-clear-car" class="btn btn-danger">Ho spostato l\'auto</button>' +
@@ -595,7 +651,7 @@ function renderCarPanel() {
 
   function applyLeadHours(hours) {
     const c = getParkedCar();
-    if (!c || !hours || hours <= 0) return;
+    if (!c || hours == null || hours < 0) return;
     c.leadHours = hours;
     c.lastNotifiedStart = null;
     c.dismissedForStart = null;
@@ -604,27 +660,7 @@ function renderCarPanel() {
     syncPushCarInfo(c);
   }
 
-  const leadSelect = document.getElementById('lead-select');
-  const customWrap = document.getElementById('lead-custom-wrap');
-  const customH = document.getElementById('lead-custom-h');
-  const customM = document.getElementById('lead-custom-m');
-  function applyCustomFromInputs() {
-    const h = parseInt(customH.value, 10) || 0;
-    const m = parseInt(customM.value, 10) || 0;
-    applyLeadHours(h + m / 60);
-  }
-  leadSelect.addEventListener('change', () => {
-    if (leadSelect.value === 'custom') {
-      customWrap.style.display = '';
-      customH.focus();
-      if (customH.value || customM.value) applyCustomFromInputs();
-    } else {
-      customWrap.style.display = 'none';
-      applyLeadHours(parseInt(leadSelect.value, 10));
-    }
-  });
-  customH.addEventListener('change', applyCustomFromInputs);
-  customM.addEventListener('change', applyCustomFromInputs);
+  wireSwipeSteppers(carPanelEl, parts, (updatedParts) => applyLeadHours(composeLeadHours(updatedParts)));
 
   document.getElementById('btn-test-alarm').addEventListener('click', () => {
     unlockAudio();

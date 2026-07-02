@@ -281,6 +281,67 @@ main {
 
 .car-status-line { font-weight: 600; margin: 4px 0; }
 
+.alarm-setter {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.alarm-setter-label {
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.swipe-steppers {
+  display: flex;
+  gap: 10px;
+}
+
+.swipe-stepper {
+  width: 72px;
+  height: 76px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: ns-resize;
+  touch-action: none;
+  user-select: none;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.swipe-stepper:hover { background: #ece3ee; }
+
+.swipe-stepper.dragging {
+  background: var(--accent);
+  transform: scale(1.05);
+}
+
+.swipe-value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--ink);
+}
+
+.swipe-label {
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.swipe-stepper.dragging .swipe-value { color: white; }
+.swipe-stepper.dragging .swipe-label { color: rgba(255, 255, 255, 0.85); }
+
+.alarm-setter-caption {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-top: 10px;
+}
+
 .car-controls {
   display: flex;
   flex-wrap: wrap;
