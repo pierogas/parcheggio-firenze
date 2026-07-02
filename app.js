@@ -657,7 +657,6 @@ function renderCarPanel() {
       '<div class="alarm-setter-caption">prima dell\'ora dello spazzamento — scorri con il dito su/giù su ogni riquadro</div>' +
     '</div>' +
     '<div class="car-controls">' +
-      '<button type="button" id="btn-test-alarm" class="btn btn-ghost">🔔 Prova la sveglia</button>' +
       permHtml +
       '<button type="button" id="btn-clear-car" class="btn btn-danger">Ho spostato l\'auto</button>' +
     '</div>' +
@@ -676,12 +675,6 @@ function renderCarPanel() {
   }
 
   wireSwipeSteppers(carPanelEl, parts, (updatedParts) => applyLeadHours(composeLeadHours(updatedParts)));
-
-  document.getElementById('btn-test-alarm').addEventListener('click', () => {
-    unlockAudio();
-    playAlarmSound();
-    showAlarmOverlay(car, { start: evald.nextInfo && evald.nextInfo.start, testMode: true });
-  });
 
   const btnEnable = document.getElementById('btn-enable-notif');
   if (btnEnable) {

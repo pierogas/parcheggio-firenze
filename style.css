@@ -315,26 +315,12 @@ main {
   transition: background 0.15s ease, transform 0.1s ease;
 }
 
-.swipe-stepper::before {
-  content: '';
-  position: absolute;
-  left: 10px;
-  right: 10px;
-  top: 34px;
-  height: 30px;
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-  pointer-events: none;
-}
-
 .swipe-stepper:hover { background: #ece3ee; }
 
 .swipe-stepper.dragging {
   background: var(--accent);
   transform: scale(1.05);
 }
-
-.swipe-stepper.dragging::before { border-color: rgba(255, 255, 255, 0.35); }
 
 .swipe-track {
   display: flex;
