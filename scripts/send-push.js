@@ -59,17 +59,25 @@ async function main() {
       }).catch(() => {});
     }
 
+    const dev = (record.deviceId || '').slice(0, 8);
+    console.log(`[diag] ${dev}: via=${record.via} tr=${record.tr} leadHours=${record.leadHours} ` +
+      `lastNotifiedStart=${record.lastNotifiedStart ? new Date(record.lastNotifiedStart).toString() : 'null'}`);
+
     if (!record.via) continue;
     const segRecords = records.filter(r => r.via === record.via && (r.tr || '') === (record.tr || ''));
-    if (!segRecords.length) continue;
+    if (!segRecords.length) { console.log(`[diag] ${dev}: nessuna regola trovata per via/tratto`); continue; }
 
     const seg = { via: record.via, tr: record.tr, rules: segRecords };
     const evald = evaluateSegment(seg, now);
-    if (!evald.nextInfo || !evald.nextInfo.start) continue;
+    if (!evald.nextInfo || !evald.nextInfo.start) { console.log(`[diag] ${dev}: nessuna prossima pulizia`); continue; }
 
     const startMs = evald.nextInfo.start.getTime();
     const reminderTime = startMs - (record.leadHours != null ? record.leadHours : 24) * 3600000;
     const nowMs = now.getTime();
+
+    console.log(`[diag] ${dev}: prossimaPulizia=${evald.nextInfo.start.toString()} ` +
+      `avvisoPrevisto=${new Date(reminderTime).toString()} adesso=${now.toString()} ` +
+      `finestraAttiva=${nowMs >= reminderTime && nowMs < startMs} giaNotificato=${record.lastNotifiedStart === startMs}`);
 
     if (nowMs >= reminderTime && nowMs < startMs && record.lastNotifiedStart !== startMs) {
       const title = titleCase(record.via) + (record.tr ? ' — ' + titleCase(record.tr) : '');
