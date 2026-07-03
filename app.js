@@ -714,7 +714,25 @@ async function renderPushControls(car) {
   const sub = await getExistingPushSubscription();
   if (sub) {
     el.innerHTML = '<span class="notif-status">🌍 Push attivo: arriva un avviso anche se chiudi l\'app o spegni il telefono</span>' +
+      '<button type="button" id="btn-test-push" class="btn btn-ghost">📬 Prova notifica</button>' +
       '<button type="button" id="btn-disable-push" class="btn btn-ghost">Disattiva</button>';
+    document.getElementById('btn-test-push').addEventListener('click', async () => {
+      const btn = document.getElementById('btn-test-push');
+      btn.disabled = true;
+      btn.textContent = 'Richiesta in corso…';
+      try {
+        const res = await fetch(PUSH_WORKER_URL + '/test-push', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ deviceId: getDeviceId() })
+        });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        el.innerHTML = '<span class="notif-status">📬 Prova richiesta! Ora <strong>chiudi completamente l\'app</strong>: la notifica di prova arriverà entro 5 minuti. Se non arriva, controlla le impostazioni di batteria/notifiche del telefono.</span>';
+      } catch (e) {
+        btn.disabled = false;
+        btn.textContent = '📬 Prova notifica';
+        alert('Impossibile richiedere la prova: riprova tra poco.');
+      }
+    });
     document.getElementById('btn-disable-push').addEventListener('click', async () => {
       await disablePushRecord();
       try { await sub.unsubscribe(); } catch (e) {}

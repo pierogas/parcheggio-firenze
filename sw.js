@@ -1,4 +1,4 @@
-const CACHE_NAME = 'parcheggio-firenze-v6';
+const CACHE_NAME = 'parcheggio-firenze-v7';
 const SHELL_FILES = [
   './',
   './index.html',
@@ -58,7 +58,12 @@ self.addEventListener('push', (event) => {
       body: data.body,
       icon: 'icon-192.png',
       badge: 'badge-96.png',
-      tag: 'parcheggio-firenze-reminder'
+      tag: 'parcheggio-firenze-reminder',
+      // Su Android: vibra, ri-avvisa anche se una notifica con lo stesso tag
+      // è già presente, e resta visibile finché l'utente non la tocca.
+      vibrate: [200, 100, 200, 100, 300],
+      renotify: true,
+      requireInteraction: true
     })
   );
 });

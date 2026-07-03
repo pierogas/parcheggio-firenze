@@ -40,6 +40,7 @@ export default {
         tr: body.tr != null ? body.tr : existing.tr,
         leadHours: body.leadHours != null ? body.leadHours : (existing.leadHours || 24),
         lastNotifiedStart: body.via !== existing.via || body.tr !== existing.tr ? null : (existing.lastNotifiedStart || null),
+        testRequestedAt: existing.testRequestedAt || null,
         updatedAt: Date.now()
       };
       await env.PARKED_CARS.put(`sub:${body.deviceId}`, JSON.stringify(record));
@@ -71,6 +72,31 @@ export default {
       if (!raw) return json({ lastNotifiedStart: null });
       const record = JSON.parse(raw);
       return json({ lastNotifiedStart: record.lastNotifiedStart || null });
+    }
+
+    // Richiesta di notifica di prova (pubblico): il client la chiede, il
+    // prossimo tick del workflow (entro ~5 min) invia il push di test.
+    // Serve a verificare la consegna reale ad app completamente chiusa.
+    if (url.pathname === '/test-push' && request.method === 'POST') {
+      const body = await request.json();
+      if (!body.deviceId) return json({ error: 'deviceId richiesto' }, { status: 400 });
+      const raw = await env.PARKED_CARS.get(`sub:${body.deviceId}`);
+      if (!raw) return json({ error: 'push non attivo per questo dispositivo' }, { status: 404 });
+      const record = JSON.parse(raw);
+      record.testRequestedAt = Date.now();
+      await env.PARKED_CARS.put(`sub:${body.deviceId}`, JSON.stringify(record));
+      return json({ ok: true });
+    }
+
+    if (url.pathname === '/clear-test' && request.method === 'POST') {
+      if (!isAuthorized(request, env)) return json({ error: 'unauthorized' }, { status: 401 });
+      const body = await request.json();
+      const raw = await env.PARKED_CARS.get(`sub:${body.deviceId}`);
+      if (!raw) return json({ error: 'not found' }, { status: 404 });
+      const record = JSON.parse(raw);
+      record.testRequestedAt = null;
+      await env.PARKED_CARS.put(`sub:${body.deviceId}`, JSON.stringify(record));
+      return json({ ok: true });
     }
 
     if (url.pathname === '/mark-notified' && request.method === 'POST') {

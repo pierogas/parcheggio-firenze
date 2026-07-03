@@ -34,6 +34,31 @@ async function main() {
   const now = new Date();
 
   for (const record of subs) {
+    // Notifica di prova richiesta dall'utente (pulsante nell'app): si invia
+    // a prescindere dalla via, così si verifica la consegna ad app chiusa.
+    if (record.testRequestedAt) {
+      const ageMin = Math.round((now.getTime() - record.testRequestedAt) / 60000);
+      if (ageMin <= 30) {
+        const payload = JSON.stringify({
+          title: 'Notifica di prova ✅',
+          body: 'Perfetto! I promemoria arrivano anche ad app chiusa.' + (ageMin > 0 ? ` (richiesta ${ageMin} min fa)` : '')
+        });
+        try {
+          await webpush.sendNotification(record.subscription, payload, { urgency: 'high', TTL: 21600 });
+          console.log(`Push di prova inviato a ${record.deviceId}`);
+        } catch (err) {
+          console.error(`Errore invio push di prova a ${record.deviceId}:`, err.statusCode || err.message);
+        }
+      } else {
+        console.log(`Richiesta di prova di ${record.deviceId} scaduta (${ageMin} min): ignorata.`);
+      }
+      await fetch(WORKER_URL + '/clear-test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${WORKER_SHARED_SECRET}` },
+        body: JSON.stringify({ deviceId: record.deviceId })
+      }).catch(() => {});
+    }
+
     if (!record.via) continue;
     const segRecords = records.filter(r => r.via === record.via && (r.tr || '') === (record.tr || ''));
     if (!segRecords.length) continue;
