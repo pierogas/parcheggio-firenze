@@ -421,6 +421,29 @@ main {
   margin-top: 10px;
 }
 
+#btn-confirm-alarm {
+  margin-top: 12px;
+}
+
+#btn-confirm-alarm:disabled {
+  background: var(--accent-soft);
+  color: var(--accent-dark);
+  box-shadow: none;
+  cursor: default;
+  transform: none;
+}
+
+.alarm-active-line {
+  margin-top: 10px;
+  font-size: 0.92rem;
+  background: var(--green-bg);
+  color: var(--ink);
+  border-radius: 12px;
+  padding: 9px 12px;
+}
+
+.alarm-active-line:empty { display: none; }
+
 .alarm-setter-warning {
   font-size: 0.85rem;
   font-weight: 600;

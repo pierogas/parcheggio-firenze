@@ -581,15 +581,20 @@ async function getExistingPushSubscription() {
 }
 
 async function sendSubscriptionToWorker(sub, car) {
-  await fetch(PUSH_WORKER_URL + '/subscribe', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      deviceId: getDeviceId(),
-      subscription: sub.toJSON(),
-      via: car.via, tr: car.tr, leadHours: car.leadHours
-    })
-  }).catch(() => {});
+  try {
+    const res = await fetch(PUSH_WORKER_URL + '/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        deviceId: getDeviceId(),
+        subscription: sub.toJSON(),
+        via: car.via, tr: car.tr, leadHours: car.leadHours
+      })
+    });
+    return res.ok;
+  } catch (e) {
+    return false;
+  }
 }
 
 async function enablePushForCar(car) {
@@ -609,8 +614,7 @@ async function enablePushForCar(car) {
       applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
     });
   }
-  await sendSubscriptionToWorker(sub, car);
-  return true;
+  return sendSubscriptionToWorker(sub, car);
 }
 
 async function syncPushCarInfo(car) {
@@ -657,35 +661,60 @@ function renderCarPanel() {
       '</div>' +
     '</div>' +
     '<div class="alarm-setter">' +
-      '<div class="alarm-setter-label">⏰ Sveglia</div>' +
+      '<div class="alarm-setter-label">⏰ Avvisami prima con:</div>' +
       '<div class="swipe-steppers">' +
         swipeStepperHtml('days', parts.days, 'giorni') +
         swipeStepperHtml('hours', parts.hours, 'ore') +
         swipeStepperHtml('minutes', parts.minutes, 'minuti') +
       '</div>' +
-      '<div class="alarm-setter-caption">prima dell\'ora dello spazzamento — scorri con il dito su/giù su ogni riquadro</div>' +
+      '<div class="alarm-setter-caption">scorri su/giù sui riquadri, poi conferma</div>' +
+      '<button type="button" id="btn-confirm-alarm" class="btn btn-primary btn-block">✅ Imposta sveglia</button>' +
+      '<div id="alarm-active-line" class="alarm-active-line"></div>' +
       '<div id="alarm-setter-warning" class="alarm-setter-warning" hidden></div>' +
     '</div>' +
     '<div class="car-controls">' +
       permHtml +
       '<button type="button" id="btn-clear-car" class="btn btn-danger">Ho spostato l\'auto</button>' +
     '</div>' +
-    '<p class="detail" style="margin-top:10px">La sveglia suona qui nell\'app quando è il momento (tienila aperta, anche in un\'altra scheda o come app installata): non serve il permesso di notifica del browser.</p>' +
     '<div class="car-controls" id="push-controls"><span class="notif-status">Controllo stato push…</span></div>';
 
-  function applyLeadHours(hours) {
+  const pending = { days: parts.days, hours: parts.hours, minutes: parts.minutes };
+  const confirmBtn = document.getElementById('btn-confirm-alarm');
+
+  function updateConfirmState() {
     const c = getParkedCar();
-    if (!c || hours == null || hours < 0) return;
-    c.leadHours = hours;
+    if (!c) return;
+    const changed = composeLeadHours(pending) !== c.leadHours;
+    confirmBtn.disabled = !changed;
+    confirmBtn.textContent = changed ? '✅ Imposta sveglia' : 'Sveglia impostata';
+    updateAlarmValidity(c, composeLeadHours(pending));
+  }
+
+  confirmBtn.addEventListener('click', async () => {
+    const c = getParkedCar();
+    if (!c) return;
+    c.leadHours = composeLeadHours(pending);
     c.lastNotifiedStart = null;
     c.dismissedForStart = null;
     saveParkedCar(c);
-    updateAlarmValidity(c);
-    syncPushCarInfo(c);
-  }
+    updateConfirmState();
+    renderActiveAlarmLine(c);
+    const sub = await getExistingPushSubscription();
+    if (sub) {
+      const ok = await sendSubscriptionToWorker(sub, c);
+      if (!ok) {
+        const warnEl = document.getElementById('alarm-setter-warning');
+        if (warnEl) {
+          warnEl.hidden = false;
+          warnEl.textContent = '⚠️ Sveglia salvata sul telefono ma non sul server push: controlla la connessione e premi di nuovo "Imposta sveglia".';
+        }
+      }
+    }
+  });
 
-  wireSwipeSteppers(carPanelEl, parts, (updatedParts) => applyLeadHours(composeLeadHours(updatedParts)));
-  updateAlarmValidity(car);
+  wireSwipeSteppers(carPanelEl, pending, () => updateConfirmState());
+  updateConfirmState();
+  renderActiveAlarmLine(car);
 
   const btnEnable = document.getElementById('btn-enable-notif');
   if (btnEnable) {
@@ -746,7 +775,7 @@ async function renderPushControls(car) {
       const ok = await enablePushForCar(c);
       el.innerHTML = ok
         ? '<span class="notif-status">🌍 Push attivato!</span>'
-        : '<span class="notif-status">Permesso negato: la sveglia interna resta comunque attiva.</span>';
+        : '<span class="notif-status">Attivazione non riuscita (permesso negato o problema di rete): la sveglia interna resta comunque attiva.</span>';
       renderPushControls(getParkedCar());
     });
   }
@@ -835,19 +864,33 @@ async function fireBrowserNotification(title, body) {
   new Notification(title, { body, icon: 'icon-192.png' });
 }
 
-function updateAlarmValidity(car) {
+function updateAlarmValidity(car, leadHoursOverride) {
   const warnEl = document.getElementById('alarm-setter-warning');
   if (!warnEl) return;
+  const leadHours = leadHoursOverride != null ? leadHoursOverride : car.leadHours;
   const seg = { via: car.via, tr: car.tr, rules: recordsForStreet(car.via).filter(r => r.tr === car.tr) };
   const evald = evaluateSegment(seg, new Date());
   if (!evald.nextInfo || !evald.nextInfo.start) { warnEl.hidden = true; return; }
-  const reminderTime = evald.nextInfo.start.getTime() - car.leadHours * 3600000;
+  const reminderTime = evald.nextInfo.start.getTime() - leadHours * 3600000;
   if (Date.now() >= reminderTime) {
     warnEl.hidden = false;
     warnEl.textContent = '⚠️ Con questo preavviso l\'avviso scatterebbe già ora: lo spazzamento è troppo vicino per avvisarti con così tanto anticipo.';
   } else {
     warnEl.hidden = true;
   }
+}
+
+// Riga di stato sotto il tasto conferma: dice esattamente quando arriverà
+// l'avviso, così l'utente ha la certezza di cosa è impostato.
+function renderActiveAlarmLine(car) {
+  const el = document.getElementById('alarm-active-line');
+  if (!el) return;
+  const seg = { via: car.via, tr: car.tr, rules: recordsForStreet(car.via).filter(r => r.tr === car.tr) };
+  const evald = evaluateSegment(seg, new Date());
+  if (!evald.nextInfo || !evald.nextInfo.start) { el.textContent = ''; return; }
+  const reminderAt = new Date(evald.nextInfo.start.getTime() - car.leadHours * 3600000);
+  if (reminderAt.getTime() <= Date.now()) { el.textContent = ''; return; }
+  el.innerHTML = '🔔 Ti avviserò <strong>' + escapeHtml(fmtDateTime(reminderAt)) + '</strong>';
 }
 
 async function checkServerAlreadyNotified(startMs) {

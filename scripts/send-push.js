@@ -68,7 +68,7 @@ async function main() {
     if (!evald.nextInfo || !evald.nextInfo.start) continue;
 
     const startMs = evald.nextInfo.start.getTime();
-    const reminderTime = startMs - (record.leadHours || 24) * 3600000;
+    const reminderTime = startMs - (record.leadHours != null ? record.leadHours : 24) * 3600000;
     const nowMs = now.getTime();
 
     if (nowMs >= reminderTime && nowMs < startMs && record.lastNotifiedStart !== startMs) {
