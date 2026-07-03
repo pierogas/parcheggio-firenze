@@ -1,4 +1,4 @@
-const CACHE_NAME = 'parcheggio-firenze-v5';
+const CACHE_NAME = 'parcheggio-firenze-v6';
 const SHELL_FILES = [
   './',
   './index.html',
@@ -36,7 +36,7 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   if (!event.request.url.startsWith(self.location.origin)) return;
   event.respondWith(
-    fetch(event.request)
+    fetch(event.request, { cache: 'no-store' })
       .then((res) => {
         if (res && res.ok) {
           const clone = res.clone();
