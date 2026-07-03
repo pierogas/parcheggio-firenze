@@ -53,7 +53,7 @@ async function main() {
         body: `Hai parcheggiato in ${title}: pulizia prevista ${fmtDateTime(evald.nextInfo.start)}.`
       });
       try {
-        await webpush.sendNotification(record.subscription, payload);
+        await webpush.sendNotification(record.subscription, payload, { urgency: 'high', TTL: 21600 });
         await fetch(WORKER_URL + '/mark-notified', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${WORKER_SHARED_SECRET}` },
