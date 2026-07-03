@@ -82,7 +82,7 @@ async function main() {
     if (nowMs >= reminderTime && nowMs < startMs && record.lastNotifiedStart !== startMs) {
       const title = titleCase(record.via) + (record.tr ? ' — ' + titleCase(record.tr) : '');
       const payload = JSON.stringify({
-        title: 'Devi spostare la macchina!',
+        title: 'Sposta la 🚗',
         body: `Hai parcheggiato in ${title}: pulizia prevista ${fmtDateTime(evald.nextInfo.start)}.`
       });
       try {

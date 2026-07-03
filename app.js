@@ -822,7 +822,7 @@ function showAlarmOverlay(car, info) {
   overlay.innerHTML =
     '<div class="alarm-card">' +
       '<div class="alarm-emoji">⏰</div>' +
-      '<h2>' + (info.testMode ? 'Prova sveglia' : 'Devi spostare la macchina!') + '</h2>' +
+      '<h2>' + (info.testMode ? 'Prova sveglia' : 'Sposta la 🚗') + '</h2>' +
       '<p>Hai parcheggiato in ' + escapeHtml(title) + (when ? '<br>Pulizia prevista ' + escapeHtml(when) : '') + '</p>' +
       '<div class="alarm-buttons">' +
         (info.testMode
@@ -859,9 +859,9 @@ async function fireBrowserNotification(title, body) {
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
   if ('serviceWorker' in navigator) {
     const reg = await navigator.serviceWorker.getRegistration();
-    if (reg) { reg.showNotification(title, { body, icon: 'icon-192.png' }); return; }
+    if (reg) { reg.showNotification(title, { body, badge: 'badge-96.png' }); return; }
   }
-  new Notification(title, { body, icon: 'icon-192.png' });
+  new Notification(title, { body });
 }
 
 function updateAlarmValidity(car, leadHoursOverride) {
@@ -932,7 +932,7 @@ async function checkCarReminder() {
     }
     const title = titleCase(car.via) + (car.tr ? ' — ' + titleCase(car.tr) : '');
     if (car.lastNotifiedStart !== startMs) {
-      fireBrowserNotification('Devi spostare la macchina!', 'Hai parcheggiato in ' + title + ': pulizia prevista ' + fmtDateTime(evald.nextInfo.start) + '.');
+      fireBrowserNotification('Sposta la 🚗', 'Hai parcheggiato in ' + title + ': pulizia prevista ' + fmtDateTime(evald.nextInfo.start) + '.');
       car.lastNotifiedStart = startMs;
       saveParkedCar(car);
     }

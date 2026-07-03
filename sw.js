@@ -1,4 +1,4 @@
-const CACHE_NAME = 'parcheggio-firenze-v7';
+const CACHE_NAME = 'parcheggio-firenze-v8';
 const SHELL_FILES = [
   './',
   './index.html',
@@ -51,12 +51,13 @@ self.addEventListener('fetch', (event) => {
 // Notifica push reale: arriva anche ad app chiusa (inviata dal workflow
 // GitHub Actions tramite il Worker Cloudflare, protocollo Web Push standard).
 self.addEventListener('push', (event) => {
-  let data = { title: 'Devi spostare la macchina!', body: 'Controlla la tua auto parcheggiata.' };
+  let data = { title: 'Sposta la 🚗', body: 'Controlla la tua auto parcheggiata.' };
   try { if (event.data) data = event.data.json(); } catch (e) {}
   event.waitUntil(
+    // Niente `icon`: Android mostra già l'icona dell'app accanto alla
+    // notifica, con l'icona grande il logo compariva due volte.
     self.registration.showNotification(data.title, {
       body: data.body,
-      icon: 'icon-192.png',
       badge: 'badge-96.png',
       tag: 'parcheggio-firenze-reminder',
       // Su Android: vibra, ri-avvisa anche se una notifica con lo stesso tag
