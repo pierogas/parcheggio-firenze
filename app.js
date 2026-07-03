@@ -859,9 +859,9 @@ async function fireBrowserNotification(title, body) {
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
   if ('serviceWorker' in navigator) {
     const reg = await navigator.serviceWorker.getRegistration();
-    if (reg) { reg.showNotification(title, { body, badge: 'badge-96.png' }); return; }
+    if (reg) { reg.showNotification(title, { body, icon: 'notif-car-192.png', badge: 'badge-96.png' }); return; }
   }
-  new Notification(title, { body });
+  new Notification(title, { body, icon: 'notif-car-192.png' });
 }
 
 function updateAlarmValidity(car, leadHoursOverride) {

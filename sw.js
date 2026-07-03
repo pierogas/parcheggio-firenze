@@ -1,4 +1,4 @@
-const CACHE_NAME = 'parcheggio-firenze-v8';
+const CACHE_NAME = 'parcheggio-firenze-v9';
 const SHELL_FILES = [
   './',
   './index.html',
@@ -10,7 +10,8 @@ const SHELL_FILES = [
   './icon-192.png',
   './icon-512.png',
   './apple-touch-icon.png',
-  './badge-96.png'
+  './badge-96.png',
+  './notif-car-192.png'
 ];
 
 self.addEventListener('install', (event) => {
@@ -54,10 +55,12 @@ self.addEventListener('push', (event) => {
   let data = { title: 'Sposta la 🚗', body: 'Controlla la tua auto parcheggiata.' };
   try { if (event.data) data = event.data.json(); } catch (e) {}
   event.waitUntil(
-    // Niente `icon`: Android mostra già l'icona dell'app accanto alla
-    // notifica, con l'icona grande il logo compariva due volte.
+    // `icon`: macchinina su fondo viola, non il logo (che Android mostra
+    // già come icona dell'app: col logo anche qui compariva due volte;
+    // senza niente Chrome disegna una "P" grigia con l'iniziale del sito).
     self.registration.showNotification(data.title, {
       body: data.body,
+      icon: 'notif-car-192.png',
       badge: 'badge-96.png',
       tag: 'parcheggio-firenze-reminder',
       // Su Android: vibra, ri-avvisa anche se una notifica con lo stesso tag
