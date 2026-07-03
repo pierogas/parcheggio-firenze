@@ -472,7 +472,14 @@ function confirmParkedHere(seg, lat, lon) {
 
 // ---------- Selettore sveglia a swipe (giorni / ore / minuti) ----------
 const SWIPE_FIELD_RANGES = { days: [0, 7], hours: [0, 24], minutes: [0, 59] };
+const SWIPE_FIELD_STEP = { days: 1, hours: 1, minutes: 5 };
 const SWIPE_STEP_PX = 24;
+
+function snapToStep(value, field) {
+  const step = SWIPE_FIELD_STEP[field];
+  const [min, max] = SWIPE_FIELD_RANGES[field];
+  return Math.max(min, Math.min(max, Math.round(value / step) * step));
+}
 
 function decomposeLeadHours(hours) {
   let totalMin = Math.round((hours || 0) * 60);
@@ -480,7 +487,7 @@ function decomposeLeadHours(hours) {
   return {
     days: Math.floor(totalMin / 1440),
     hours: Math.floor((totalMin % 1440) / 60),
-    minutes: totalMin % 60
+    minutes: snapToStep(totalMin % 60, 'minutes')
   };
 }
 
@@ -490,8 +497,9 @@ function composeLeadHours(parts) {
 
 function swipeStepperHtml(field, value, label) {
   const [min, max] = SWIPE_FIELD_RANGES[field];
-  const prev = value > min ? value - 1 : '';
-  const next = value < max ? value + 1 : '';
+  const step = SWIPE_FIELD_STEP[field];
+  const prev = value - step >= min ? value - step : '';
+  const next = value + step <= max ? value + step : '';
   return '<div class="swipe-stepper" data-field="' + field + '">' +
     '<div class="swipe-track">' +
       '<div class="swipe-value swipe-prev">' + prev + '</div>' +
@@ -506,6 +514,7 @@ function wireSwipeSteppers(container, parts, onChange) {
   container.querySelectorAll('.swipe-stepper').forEach((el) => {
     const field = el.getAttribute('data-field');
     const [min, max] = SWIPE_FIELD_RANGES[field];
+    const step = SWIPE_FIELD_STEP[field];
     const prevEl = el.querySelector('.swipe-prev');
     const currentEl = el.querySelector('.swipe-current');
     const nextEl = el.querySelector('.swipe-next');
@@ -513,8 +522,8 @@ function wireSwipeSteppers(container, parts, onChange) {
 
     function render(val) {
       currentEl.textContent = val;
-      prevEl.textContent = val > min ? val - 1 : '';
-      nextEl.textContent = val < max ? val + 1 : '';
+      prevEl.textContent = val - step >= min ? val - step : '';
+      nextEl.textContent = val + step <= max ? val + step : '';
     }
 
     el.addEventListener('pointerdown', (e) => {
@@ -527,7 +536,7 @@ function wireSwipeSteppers(container, parts, onChange) {
     el.addEventListener('pointermove', (e) => {
       if (!dragging) return;
       const steps = Math.round((startY - e.clientY) / SWIPE_STEP_PX);
-      const newVal = Math.max(min, Math.min(max, startVal + steps));
+      const newVal = Math.max(min, Math.min(max, startVal + steps * step));
       render(newVal);
     });
     function endDrag() {
