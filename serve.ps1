@@ -1,5 +1,5 @@
 param(
-  [int]$Port = 5500,
+  [int]$Port = $(if ($env:PORT) { [int]$env:PORT } else { 5500 }),
   [string]$Root = $PSScriptRoot
 )
 

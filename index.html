@@ -15,20 +15,21 @@
 <div id="app">
   <header class="hero">
     <div class="hero-inner">
-      <div class="hero-badge">🅿️</div>
+      <div class="hero-badge"><img src="icon-192.png" alt="" class="hero-logo"></div>
       <div>
         <h1>Dove posso parcheggiare?</h1>
-        <p class="subtitle">Pulizia strade di Firenze in tempo reale — chiedi una via, guarda la mappa, o salva dove hai lasciato l'auto.</p>
+        <p class="subtitle">Pulizia strade di Firenze — controlla una via, salva dove hai lasciato l'auto e ricevi l'avviso prima dello spazzamento.</p>
       </div>
     </div>
   </header>
 
   <main>
     <section class="card ask-card">
+      <div class="card-heading">🔎 Verifica una via</div>
+      <p class="card-hint">Scopri se e quando c'è lo spazzamento (divieto di sosta).</p>
       <form id="ask-form" autocomplete="off">
         <div class="ask-row">
-          <span class="ask-icon">💬</span>
-          <input type="text" id="ask-input" placeholder="Inserisci la via dove vuoi parcheggiare" list="street-list">
+          <input type="text" id="ask-input" placeholder="Es: via dell'Agnolo" list="street-list">
           <datalist id="street-list"></datalist>
           <button type="submit" class="btn btn-primary">Verifica</button>
         </div>
@@ -36,11 +37,20 @@
     </section>
 
     <section class="card parking-actions">
-      <div class="parking-actions-label">🚗 Parcheggio</div>
+      <div class="card-heading">🚗 La tua auto</div>
       <div class="parking-actions-buttons">
-        <button id="btn-park-here" type="button" class="btn btn-primary btn-block">🚗 Ho parcheggiato qui</button>
-        <button id="btn-geo" type="button" class="btn btn-secondary btn-block">📍 Consigliami dove parcheggiare</button>
-        <button id="btn-park-manual" type="button" class="btn btn-ghost btn-block">✏️ Verifica orari spazzamento di una via</button>
+        <button id="btn-park-here" type="button" class="btn btn-primary btn-block btn-rich">
+          <span class="btn-title">Ho parcheggiato qui</span>
+          <span class="btn-hint">Salva il punto col GPS e attiva il promemoria</span>
+        </button>
+        <button id="btn-geo" type="button" class="btn btn-secondary btn-block btn-rich">
+          <span class="btn-title">📍 Consigliami dove parcheggiare</span>
+          <span class="btn-hint">Le vie libere più vicine a te, adesso</span>
+        </button>
+        <button id="btn-park-manual" type="button" class="btn btn-ghost btn-block btn-rich">
+          <span class="btn-title">✏️ Segna a mano dove hai parcheggiato</span>
+          <span class="btn-hint">Se il GPS sbaglia o te ne sei dimenticato</span>
+        </button>
       </div>
     </section>
 
@@ -53,12 +63,17 @@
     <section id="answer" class="card answer" hidden></section>
 
     <section class="card map-card">
+      <div class="map-legend">
+        <span class="legend-item"><span class="legend-dot free"></span>Libera</span>
+        <span class="legend-item"><span class="legend-dot soon"></span>Pulizia in giornata</span>
+        <span class="legend-item"><span class="legend-dot busy"></span>Pulizia in corso</span>
+      </div>
       <div id="map"></div>
     </section>
   </main>
 
   <footer>
-    <p>Dati: <em>Pulizia Strade</em>, Comune di Firenze / Alia SpA (open data, licenza CC-BY 4.0 — vedi cartella sorgente). Software puramente informativo: verifica sempre la segnaletica stradale reale, l'orario potrebbe cambiare o non essere aggiornato. Le notifiche funzionano solo mentre l'app/il browser è aperto (anche in background), non è previsto invio push da server.</p>
+    <p>Dati: <em>Pulizia Strade</em>, Comune di Firenze / Alia SpA (open data, licenza CC-BY 4.0). Software puramente informativo: verifica sempre la segnaletica stradale reale, l'orario potrebbe cambiare o non essere aggiornato.</p>
   </footer>
 </div>
 

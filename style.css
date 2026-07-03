@@ -61,16 +61,21 @@ body {
 }
 
 .hero-badge {
-  font-size: 2.1rem;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.92);
   border-radius: 20px;
-  width: 60px;
-  height: 60px;
+  width: 64px;
+  height: 64px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+}
+
+.hero-logo {
+  width: 52px;
+  height: 52px;
+  display: block;
 }
 
 .hero h1 {
@@ -101,6 +106,25 @@ main {
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   padding: 18px 20px;
+  animation: card-in 0.3s ease both;
+}
+
+@keyframes card-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+.card-heading {
+  font-weight: 800;
+  font-size: 1.02rem;
+  margin-bottom: 2px;
+  letter-spacing: -0.01em;
+}
+
+.card-hint {
+  margin: 0 0 12px;
+  font-size: 0.84rem;
+  color: var(--muted);
 }
 
 .ask-card { padding: 16px 18px; }
@@ -116,8 +140,6 @@ main {
   border-radius: 18px;
   padding: 4px 4px 4px 16px;
 }
-
-.ask-icon { font-size: 1.1rem; opacity: 0.7; }
 
 #ask-input {
   flex: 1;
@@ -137,6 +159,14 @@ main {
   cursor: pointer;
   font-weight: 600;
   white-space: nowrap;
+  transition: transform 0.1s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+
+.btn:active { transform: scale(0.97); }
+
+.btn:focus-visible {
+  outline: 3px solid var(--lilac);
+  outline-offset: 2px;
 }
 
 .btn-primary {
@@ -148,11 +178,7 @@ main {
 .btn-primary:hover { filter: brightness(1.08); }
 
 /* ---------- Azioni parcheggio (gerarchia) ---------- */
-.parking-actions-label {
-  font-weight: 700;
-  margin-bottom: 12px;
-  font-size: 0.95rem;
-}
+.parking-actions .card-heading { margin-bottom: 12px; }
 
 .parking-actions-buttons {
   display: flex;
@@ -166,6 +192,26 @@ main {
   border-radius: 16px;
   text-align: center;
 }
+
+.btn-rich {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  white-space: normal;
+}
+
+.btn-rich .btn-title { font-weight: 700; font-size: 1rem; }
+
+.btn-rich .btn-hint {
+  font-weight: 500;
+  font-size: 0.78rem;
+  opacity: 0.75;
+}
+
+.btn-primary.btn-rich .btn-title { font-size: 1.08rem; }
+.btn-primary.btn-rich { padding: 15px 18px; }
+.btn-primary.btn-rich .btn-hint { color: rgba(255, 255, 255, 0.9); opacity: 1; }
 
 .btn-secondary {
   background: var(--accent-soft);
@@ -511,10 +557,37 @@ main {
 /* ---------- Mappa ---------- */
 .map-card { padding: 0; overflow: hidden; }
 
+.map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  padding: 12px 16px;
+  font-size: 0.82rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.legend-dot.free { background: var(--green); }
+.legend-dot.soon { background: var(--amber); }
+.legend-dot.busy { background: var(--red); }
+
 #map {
   height: 460px;
   width: 100%;
-  border-radius: var(--radius);
+  border-radius: 0 0 var(--radius) var(--radius);
 }
 
 footer {
@@ -532,7 +605,6 @@ footer {
   .hero h1 { font-size: 1.25rem; }
   .ask-row { flex-wrap: wrap; }
   #ask-input { width: 100%; order: 1; }
-  .ask-icon { order: 0; }
   .ask-row .btn-primary { order: 2; width: 100%; }
   #map { height: 340px; }
 }
