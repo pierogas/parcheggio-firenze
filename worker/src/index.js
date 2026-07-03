@@ -34,12 +34,17 @@ export default {
       }
       const existingRaw = await env.PARKED_CARS.get(`sub:${body.deviceId}`);
       const existing = existingRaw ? JSON.parse(existingRaw) : {};
+      // Cambiare via/tratto O il preavviso riarma la notifica: l'utente ha
+      // reimpostato la sveglia, quindi va avvisato di nuovo anche se per
+      // questa occorrenza di pulizia era già partito un avviso in passato.
+      const sameSetup = body.via === existing.via && body.tr === existing.tr &&
+        (body.leadHours == null || body.leadHours === existing.leadHours);
       const record = {
         subscription: body.subscription,
         via: body.via != null ? body.via : existing.via,
         tr: body.tr != null ? body.tr : existing.tr,
         leadHours: body.leadHours != null ? body.leadHours : (existing.leadHours || 24),
-        lastNotifiedStart: body.via !== existing.via || body.tr !== existing.tr ? null : (existing.lastNotifiedStart || null),
+        lastNotifiedStart: sameSetup ? (existing.lastNotifiedStart || null) : null,
         testRequestedAt: existing.testRequestedAt || null,
         updatedAt: Date.now()
       };
