@@ -655,6 +655,7 @@ function renderCarPanel() {
         swipeStepperHtml('minutes', parts.minutes, 'minuti') +
       '</div>' +
       '<div class="alarm-setter-caption">prima dell\'ora dello spazzamento — scorri con il dito su/giù su ogni riquadro</div>' +
+      '<div id="alarm-setter-warning" class="alarm-setter-warning" hidden></div>' +
     '</div>' +
     '<div class="car-controls">' +
       permHtml +
@@ -670,11 +671,12 @@ function renderCarPanel() {
     c.lastNotifiedStart = null;
     c.dismissedForStart = null;
     saveParkedCar(c);
-    checkCarReminder();
+    updateAlarmValidity(c);
     syncPushCarInfo(c);
   }
 
   wireSwipeSteppers(carPanelEl, parts, (updatedParts) => applyLeadHours(composeLeadHours(updatedParts)));
+  updateAlarmValidity(car);
 
   const btnEnable = document.getElementById('btn-enable-notif');
   if (btnEnable) {
@@ -806,7 +808,35 @@ async function fireBrowserNotification(title, body) {
   new Notification(title, { body, icon: 'icon-192.png' });
 }
 
-function checkCarReminder() {
+function updateAlarmValidity(car) {
+  const warnEl = document.getElementById('alarm-setter-warning');
+  if (!warnEl) return;
+  const seg = { via: car.via, tr: car.tr, rules: recordsForStreet(car.via).filter(r => r.tr === car.tr) };
+  const evald = evaluateSegment(seg, new Date());
+  if (!evald.nextInfo || !evald.nextInfo.start) { warnEl.hidden = true; return; }
+  const reminderTime = evald.nextInfo.start.getTime() - car.leadHours * 3600000;
+  if (Date.now() >= reminderTime) {
+    warnEl.hidden = false;
+    warnEl.textContent = '⚠️ Con questo preavviso l\'avviso scatterebbe già ora: lo spazzamento è troppo vicino per avvisarti con così tanto anticipo.';
+  } else {
+    warnEl.hidden = true;
+  }
+}
+
+async function checkServerAlreadyNotified(startMs) {
+  try {
+    const sub = await getExistingPushSubscription();
+    if (!sub) return false;
+    const res = await fetch(PUSH_WORKER_URL + '/status?deviceId=' + encodeURIComponent(getDeviceId()));
+    if (!res.ok) return false;
+    const data = await res.json();
+    return !!data && data.lastNotifiedStart === startMs;
+  } catch (e) {
+    return false;
+  }
+}
+
+async function checkCarReminder() {
   const car = getParkedCar();
   if (!car) return;
 
@@ -823,6 +853,13 @@ function checkCarReminder() {
   if (car.dismissedForStart === startMs) return;
 
   if (now >= reminderTime && now < startMs) {
+    const alreadySentByServer = await checkServerAlreadyNotified(startMs);
+    if (alreadySentByServer) {
+      car.lastNotifiedStart = startMs;
+      car.dismissedForStart = startMs;
+      saveParkedCar(car);
+      return;
+    }
     const title = titleCase(car.via) + (car.tr ? ' — ' + titleCase(car.tr) : '');
     if (car.lastNotifiedStart !== startMs) {
       fireBrowserNotification('Devi spostare la macchina!', 'Hai parcheggiato in ' + title + ': pulizia prevista ' + fmtDateTime(evald.nextInfo.start) + '.');

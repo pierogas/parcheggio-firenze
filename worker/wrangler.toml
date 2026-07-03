@@ -7,4 +7,4 @@ binding = "PARKED_CARS"
 id = "049ca41e555142508f9c51070b695d71"
 
 [triggers]
-crons = ["* * * * *"]
+crons = ["*/5 * * * *"]

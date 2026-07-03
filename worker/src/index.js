@@ -64,6 +64,15 @@ export default {
       return json(out);
     }
 
+    if (url.pathname === '/status' && request.method === 'GET') {
+      const deviceId = url.searchParams.get('deviceId');
+      if (!deviceId) return json({ error: 'deviceId richiesto' }, { status: 400 });
+      const raw = await env.PARKED_CARS.get(`sub:${deviceId}`);
+      if (!raw) return json({ lastNotifiedStart: null });
+      const record = JSON.parse(raw);
+      return json({ lastNotifiedStart: record.lastNotifiedStart || null });
+    }
+
     if (url.pathname === '/mark-notified' && request.method === 'POST') {
       if (!isAuthorized(request, env)) return json({ error: 'unauthorized' }, { status: 401 });
       const body = await request.json();

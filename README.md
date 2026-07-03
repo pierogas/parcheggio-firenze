@@ -61,13 +61,31 @@ Architettura (tutta gratuita, nessun server sempre-acceso da mantenere):
   serverless gratuito che salva le iscrizioni push in un database key-value
   (Cloudflare KV). Non contiene la logica di quando avvisare: è solo lo
   "storage" condiviso tra il telefono e il processo che invia i push.
-- **GitHub Actions** (`.github/workflows/send-reminders.yml`): uno scheduled
-  workflow gratuito che gira ogni 15 minuti, legge le iscrizioni dal Worker,
-  usa la stessa logica di calcolo di `app.js` (condivisa in `logic.js`) per
-  capire a chi serve un avviso adesso, e invia il push tramite la libreria
-  `web-push` con le chiavi VAPID (salvate come secret del repository, mai
-  esposte pubblicamente — solo la chiave pubblica VAPID è nel client, quella
-  privata resta solo nei secret di GitHub Actions).
+- **Cloudflare Cron Trigger** (`worker/wrangler.toml`, ogni 5 minuti): lo
+  `schedule` nativo di GitHub Actions sui piani gratuiti viene ritardato
+  anche di ore (verificato), quindi il vero "orologio" è il Cron Trigger di
+  Cloudflare (affidabile), che si limita a far partire il workflow GitHub
+  tramite l'API (`workflow_dispatch`) usando un token dedicato salvato come
+  secret del Worker.
+- **GitHub Actions** (`.github/workflows/send-reminders.yml`): legge le
+  iscrizioni dal Worker, usa la stessa logica di calcolo di `app.js`
+  (condivisa in `logic.js`) per capire a chi serve un avviso adesso, e invia
+  il push tramite la libreria `web-push` con le chiavi VAPID (salvate come
+  secret del repository, mai esposte pubblicamente — solo la chiave pubblica
+  VAPID è nel client, quella privata resta solo nei secret di GitHub Actions).
+
+⚠️ **Perché ogni 5 minuti e non più spesso**: Cloudflare KV sul piano
+gratuito ha una quota di **1.000 operazioni "list" al giorno**, separata e
+molto più bassa di quella in lettura/scrittura (100.000/giorno). Ogni
+controllo del Worker fa una `list()` sulle iscrizioni: a un controllo al
+minuto si superano le 1.000/giorno (l'abbiamo scoperto raggiungendo il 50%
+della quota in poche ore). Ogni 5 minuti restano 288 operazioni/giorno,
+abbondantemente sotto il limite.
+
+Il client controlla anche `GET /status?deviceId=...` (letture semplici, non
+list, quota separata e capiente) per sapere se il server ha già inviato il
+push per l'occorrenza corrente: se sì, non fa scattare anche la sveglia
+interna quando riapri l'app dopo aver già ricevuto la notifica reale.
 
 Se disattivi il push, il record lato server viene cancellato ma la sveglia
 interna dell'app continua a funzionare normalmente.

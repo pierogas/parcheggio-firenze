@@ -375,6 +375,16 @@ main {
   margin-top: 10px;
 }
 
+.alarm-setter-warning {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--red);
+  background: var(--red-bg);
+  border-radius: 10px;
+  padding: 8px 12px;
+  margin-top: 10px;
+}
+
 .car-controls {
   display: flex;
   flex-wrap: wrap;
