@@ -15,6 +15,13 @@ spazzamento.
   URL `https://parcheggio-firenze-push.rumpietro.workers.dev`)
 - Cartella locale progetto: `C:\Users\39340\ParcheggioFirenze`
 - Dataset sorgente: `C:\Users\39340\Downloads\Pulizia_Strade (2)\...\pulizia_strade.kmz`
+  — download: https://datigis.comune.fi.it/kml/pulizia_strade.kmz
+  ⚠️ Licenza verificata il 3/7/26: **CC BY-NC-SA 4.0 (NON commerciale)**,
+  non CC-BY come si pensava. Monetizzare l'app con questi dati richiede
+  un accordo con Comune di Firenze/Alia. Nessun'altra città italiana
+  pubblica open data di spazzamento (verificati dati.gov.it, Milano,
+  Bologna, Torino); il portale Alia copre 50+ comuni toscani ma senza
+  download. USA: SF/Chicago/LA hanno dataset aperti di street sweeping.
 
 ## Ambiente locale (Windows, inizialmente senza Python/Node)
 
