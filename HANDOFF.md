@@ -126,14 +126,24 @@ comando **all'utente nel suo terminale**, non tramite tool call.
    a volte stato "errored" temporaneo che si risolve da solo): se stuck oltre
    ~10 min, fare un commit vuoto (`git commit --allow-empty`) per ritriggerare.
 
-## Stato UI attuale (dopo restyling)
+## Stato UI attuale (dopo rebrand "SpazzApp", teal)
 
-- Tema colore viola (`--accent: #752786`, `--accent-dark: #45174f`),
-  estratto dal logo fornito dall'utente. Sfondo con radial-gradient soft.
-- Logo: fleur-de-lis/gallo fiorentino con "P", fornito dall'utente
-  (`Downloads/Logo app.png`, `Downloads/Badge.png` — non nel repo, solo gli
-  export generati: `icon-192.png`, `icon-512.png`, `icon-maskable-*.png`,
-  `apple-touch-icon.png`, `badge-96.png`).
+- **Rebrand completo → "SpazzApp"** (era "Dove posso parcheggiare"). Tema
+  **teal** (`--accent: #0E7268`, `--accent-dark: #0A544C`, tint `#E3F0EE`,
+  border `#DDE5E3`, ink `#2B3634`). Asset brand forniti dall'utente in
+  `Downloads/Logo e icone per app spazzamento/.../assets` (logo "spazzolone
+  nel pin" + 5 icone outline), copiati in `assets/` (SVG) del repo.
+- **Interfaccia a 3 schede in basso** (tab bar fissa): Verifica / Auto /
+  Mappa — una vista alla volta. Top bar teal compatta con logo bianco +
+  "SpazzApp" + titolo scheda corrente. Icone tab = SVG inline (currentColor,
+  attivo = teal). Scheda Mappa a schermo intero con ricerca flottante,
+  legenda, pulsante veicolo flottante (`#fab-park`), pannello a scomparsa
+  `#map-sheet` per risultati ricerca/consigli. `switchTab()` in app.js;
+  Leaflet `invalidateSize`+refit all'apertura della scheda Mappa.
+- Icone PNG rigenerate da `scripts/make-brand-icons.js` (sharp, simbolo
+  bianco su tile teal): `icon-192/512`, `icon-maskable-192/512`,
+  `apple-touch-icon`, `notif-car-192`, `badge-96` (bianco su trasparente).
+- Icona notifica push = `notif-car-192.png` (ora tile teal + simbolo).
 - Home page: card "Verifica" (ricerca via, placeholder "Inserisci la via
   dove vuoi parcheggiare") SEPARATA dalla card "🚗 Parcheggio" con 3 azioni
   gerarchiche: **Ho parcheggiato qui** (primaria, gradiente), **Consigliami

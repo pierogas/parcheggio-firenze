@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#752786">
-<title>Dove posso parcheggiare? — Pulizia strade Firenze</title>
+<meta name="theme-color" content="#0E7268">
+<title>SpazzApp — Pulizia strade Firenze</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png" type="image/png" sizes="192x192">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -14,8 +14,11 @@
 <body>
 <div id="app">
   <header class="topbar">
-    <img src="icon-192.png" alt="" class="topbar-logo">
-    <div class="topbar-title" id="topbar-title">La tua auto</div>
+    <img src="assets/logo-spazzapp-white.svg" alt="" class="topbar-logo">
+    <div class="topbar-brand">
+      <span class="topbar-name">SpazzApp</span>
+      <span class="topbar-title" id="topbar-title">La tua auto</span>
+    </div>
   </header>
 
   <main>
@@ -66,7 +69,7 @@
     <section class="tab-panel tab-panel-map" id="tab-mappa" data-tab="mappa" hidden>
       <div class="map-wrap">
         <div class="map-search">
-          <span class="map-search-icon">🔎</span>
+          <span class="map-search-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"></circle><path d="M15.8 15.8 L20 20"></path></svg></span>
           <input type="text" id="map-search-input" placeholder="Cerca una via sulla mappa" list="street-list">
         </div>
         <div id="map"></div>
@@ -75,7 +78,7 @@
           <span class="legend-item"><span class="legend-dot soon"></span>Oggi</span>
           <span class="legend-item"><span class="legend-dot busy"></span>In corso</span>
         </div>
-        <button id="fab-park" class="fab" type="button" aria-label="Ho parcheggiato qui">🚗</button>
+        <button id="fab-park" class="fab" type="button" aria-label="Ho parcheggiato qui"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17 L4 13.5 L5.6 9.1 C5.9 8.4 6.6 8 7.3 8 L16.7 8 C17.4 8 18.1 8.4 18.4 9.1 L20 13.5 L20 17"></path><path d="M4 13.5 L20 13.5"></path><circle cx="7.5" cy="17" r="1.8"></circle><circle cx="16.5" cy="17" r="1.8"></circle></svg></button>
         <div id="map-sheet" class="map-sheet" hidden></div>
       </div>
     </section>
@@ -83,14 +86,17 @@
 
   <nav class="tabbar" role="tablist">
     <button class="tab-btn" type="button" data-target="verifica">
-      <span class="tab-ico">🔎</span><span class="tab-lbl">Verifica</span>
+      <span class="tab-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"></circle><path d="M15.8 15.8 L20 20"></path></svg></span>
+      <span class="tab-lbl">Verifica</span>
     </button>
     <button class="tab-btn is-active" type="button" data-target="auto">
-      <span class="tab-ico">🚗</span><span class="tab-lbl">Auto</span>
+      <span class="tab-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17 L4 13.5 L5.6 9.1 C5.9 8.4 6.6 8 7.3 8 L16.7 8 C17.4 8 18.1 8.4 18.4 9.1 L20 13.5 L20 17"></path><path d="M4 13.5 L20 13.5"></path><circle cx="7.5" cy="17" r="1.8"></circle><circle cx="16.5" cy="17" r="1.8"></circle></svg></span>
+      <span class="tab-lbl">Auto</span>
       <span class="tab-badge" id="tab-badge-auto" hidden></span>
     </button>
     <button class="tab-btn" type="button" data-target="mappa">
-      <span class="tab-ico">🗺️</span><span class="tab-lbl">Mappa</span>
+      <span class="tab-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4 L3 6 L3 20 L9 18 L15 20 L21 18 L21 4 L15 6 Z"></path><path d="M9 4 L9 18"></path><path d="M15 6 L15 20"></path></svg></span>
+      <span class="tab-lbl">Mappa</span>
     </button>
   </nav>
 </div>

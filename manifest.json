@@ -1,12 +1,12 @@
 {
-  "name": "Dove posso parcheggiare a Firenze",
-  "short_name": "Parcheggio FI",
-  "description": "Pulizia strade di Firenze in tempo reale: chiedi una via, guarda la mappa, salva dove hai parcheggiato e ricevi un promemoria prima della pulizia.",
+  "name": "SpazzApp — Pulizia strade Firenze",
+  "short_name": "SpazzApp",
+  "description": "Monitora lo spazzamento delle strade di Firenze: controlla una via, salva dove hai parcheggiato e ricevi un promemoria prima della pulizia per non prendere la multa.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#f5f1f6",
-  "theme_color": "#752786",
+  "background_color": "#F4F8F7",
+  "theme_color": "#0E7268",
   "lang": "it",
   "icons": [
     { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },

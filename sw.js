@@ -1,4 +1,4 @@
-const CACHE_NAME = 'parcheggio-firenze-v10';
+const CACHE_NAME = 'parcheggio-firenze-v11';
 const SHELL_FILES = [
   './',
   './index.html',
@@ -11,7 +11,8 @@ const SHELL_FILES = [
   './icon-512.png',
   './apple-touch-icon.png',
   './badge-96.png',
-  './notif-car-192.png'
+  './notif-car-192.png',
+  './assets/logo-spazzapp-white.svg'
 ];
 
 self.addEventListener('install', (event) => {
