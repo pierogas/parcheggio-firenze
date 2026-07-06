@@ -1,4 +1,4 @@
-const CACHE_NAME = 'parcheggio-firenze-v9';
+const CACHE_NAME = 'parcheggio-firenze-v10';
 const SHELL_FILES = [
   './',
   './index.html',

@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#752786">
 <title>Dove posso parcheggiare? — Pulizia strade Firenze</title>
 <link rel="manifest" href="manifest.json">
@@ -13,68 +13,86 @@
 </head>
 <body>
 <div id="app">
-  <header class="hero">
-    <div class="hero-inner">
-      <div class="hero-badge"><img src="icon-192.png" alt="" class="hero-logo"></div>
-      <div>
-        <h1>Dove posso parcheggiare?</h1>
-        <p class="subtitle">Pulizia strade di Firenze — controlla una via, salva dove hai lasciato l'auto e ricevi l'avviso prima dello spazzamento.</p>
-      </div>
-    </div>
+  <header class="topbar">
+    <img src="icon-192.png" alt="" class="topbar-logo">
+    <div class="topbar-title" id="topbar-title">La tua auto</div>
   </header>
 
   <main>
-    <section class="card ask-card">
-      <div class="card-heading">🔎 Verifica una via</div>
-      <p class="card-hint">Scopri se e quando c'è lo spazzamento (divieto di sosta).</p>
-      <form id="ask-form" autocomplete="off">
-        <div class="ask-row">
-          <input type="text" id="ask-input" placeholder="Es: via dell'Agnolo" list="street-list">
-          <datalist id="street-list"></datalist>
-          <button type="submit" class="btn btn-primary">Verifica</button>
+    <!-- ===== Scheda: Verifica ===== -->
+    <section class="tab-panel" id="tab-verifica" data-tab="verifica" hidden>
+      <div class="card ask-card">
+        <div class="card-heading">🔎 Verifica una via</div>
+        <p class="card-hint">Scopri se e quando c'è lo spazzamento (divieto di sosta).</p>
+        <form id="ask-form" autocomplete="off">
+          <div class="ask-row">
+            <input type="text" id="ask-input" placeholder="Es: via dell'Agnolo" list="street-list">
+            <datalist id="street-list"></datalist>
+            <button type="submit" class="btn btn-primary">Verifica</button>
+          </div>
+        </form>
+      </div>
+      <section id="answer" class="card answer" hidden></section>
+    </section>
+
+    <!-- ===== Scheda: Auto ===== -->
+    <section class="tab-panel" id="tab-auto" data-tab="auto">
+      <div class="card parking-actions" id="parking-actions">
+        <div class="card-heading">🚗 La tua auto</div>
+        <div class="parking-actions-buttons">
+          <button id="btn-park-here" type="button" class="btn btn-primary btn-block btn-rich">
+            <span class="btn-title">Ho parcheggiato qui</span>
+            <span class="btn-hint">Salva il punto col GPS e attiva il promemoria</span>
+          </button>
+          <button id="btn-geo" type="button" class="btn btn-secondary btn-block btn-rich">
+            <span class="btn-title">📍 Consigliami dove parcheggiare</span>
+            <span class="btn-hint">Le vie libere più vicine a te, adesso</span>
+          </button>
+          <button id="btn-park-manual" type="button" class="btn btn-ghost btn-block btn-rich">
+            <span class="btn-title">✏️ Segna a mano dove hai parcheggiato</span>
+            <span class="btn-hint">Se il GPS sbaglia o te ne sei dimenticato</span>
+          </button>
         </div>
-      </form>
+      </div>
+
+      <section id="park-picker" class="card park-picker" hidden></section>
+      <section id="manual-park" class="card park-picker" hidden></section>
+      <section id="car-panel" class="card car-panel" hidden></section>
+
+      <p class="disclaimer">Dati: <em>Pulizia Strade</em>, Comune di Firenze / Alia SpA (open data, licenza CC BY-NC-SA 4.0). Software puramente informativo: verifica sempre la segnaletica stradale reale, l'orario potrebbe cambiare o non essere aggiornato.</p>
     </section>
 
-    <section class="card parking-actions">
-      <div class="card-heading">🚗 La tua auto</div>
-      <div class="parking-actions-buttons">
-        <button id="btn-park-here" type="button" class="btn btn-primary btn-block btn-rich">
-          <span class="btn-title">Ho parcheggiato qui</span>
-          <span class="btn-hint">Salva il punto col GPS e attiva il promemoria</span>
-        </button>
-        <button id="btn-geo" type="button" class="btn btn-secondary btn-block btn-rich">
-          <span class="btn-title">📍 Consigliami dove parcheggiare</span>
-          <span class="btn-hint">Le vie libere più vicine a te, adesso</span>
-        </button>
-        <button id="btn-park-manual" type="button" class="btn btn-ghost btn-block btn-rich">
-          <span class="btn-title">✏️ Segna a mano dove hai parcheggiato</span>
-          <span class="btn-hint">Se il GPS sbaglia o te ne sei dimenticato</span>
-        </button>
+    <!-- ===== Scheda: Mappa ===== -->
+    <section class="tab-panel tab-panel-map" id="tab-mappa" data-tab="mappa" hidden>
+      <div class="map-wrap">
+        <div class="map-search">
+          <span class="map-search-icon">🔎</span>
+          <input type="text" id="map-search-input" placeholder="Cerca una via sulla mappa" list="street-list">
+        </div>
+        <div id="map"></div>
+        <div class="map-legend-float">
+          <span class="legend-item"><span class="legend-dot free"></span>Libera</span>
+          <span class="legend-item"><span class="legend-dot soon"></span>Oggi</span>
+          <span class="legend-item"><span class="legend-dot busy"></span>In corso</span>
+        </div>
+        <button id="fab-park" class="fab" type="button" aria-label="Ho parcheggiato qui">🚗</button>
+        <div id="map-sheet" class="map-sheet" hidden></div>
       </div>
-    </section>
-
-    <section id="park-picker" class="card park-picker" hidden></section>
-
-    <section id="manual-park" class="card park-picker" hidden></section>
-
-    <section id="car-panel" class="card car-panel" hidden></section>
-
-    <section id="answer" class="card answer" hidden></section>
-
-    <section class="card map-card">
-      <div class="map-legend">
-        <span class="legend-item"><span class="legend-dot free"></span>Libera</span>
-        <span class="legend-item"><span class="legend-dot soon"></span>Pulizia in giornata</span>
-        <span class="legend-item"><span class="legend-dot busy"></span>Pulizia in corso</span>
-      </div>
-      <div id="map"></div>
     </section>
   </main>
 
-  <footer>
-    <p>Dati: <em>Pulizia Strade</em>, Comune di Firenze / Alia SpA (open data, licenza CC BY-NC-SA 4.0). Software puramente informativo: verifica sempre la segnaletica stradale reale, l'orario potrebbe cambiare o non essere aggiornato.</p>
-  </footer>
+  <nav class="tabbar" role="tablist">
+    <button class="tab-btn" type="button" data-target="verifica">
+      <span class="tab-ico">🔎</span><span class="tab-lbl">Verifica</span>
+    </button>
+    <button class="tab-btn is-active" type="button" data-target="auto">
+      <span class="tab-ico">🚗</span><span class="tab-lbl">Auto</span>
+      <span class="tab-badge" id="tab-badge-auto" hidden></span>
+    </button>
+    <button class="tab-btn" type="button" data-target="mappa">
+      <span class="tab-ico">🗺️</span><span class="tab-lbl">Mappa</span>
+    </button>
+  </nav>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>

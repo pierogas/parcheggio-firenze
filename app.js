@@ -114,7 +114,7 @@ function statusText(seg) {
 }
 
 // ---------- Mappa ----------
-let map, layerGroup;
+let map, layerGroup, lastBounds = null;
 function initMap() {
   map = L.map('map').setView([43.7696, 11.2558], 14);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -159,6 +159,7 @@ function drawSegments(evaluatedSegments) {
 
 function drawSegmentsAndFit(evaluatedSegments) {
   const bounds = drawSegments(evaluatedSegments);
+  lastBounds = bounds.length ? bounds : null;
   if (bounds.length) map.fitBounds(bounds, { padding: [30, 30], maxZoom: 17 });
 }
 
@@ -228,6 +229,7 @@ function renderAnswer(streetName, refDate, alternatives) {
     html += '<div class="segment-list">';
     for (const seg of segments) html += segmentCardHtml(seg);
     html += '</div>';
+    html += '<button type="button" class="btn btn-secondary btn-block" id="btn-show-map" style="margin-top:14px">🗺️ Mostra sulla mappa</button>';
   }
 
   answerEl.hidden = false;
@@ -240,6 +242,9 @@ function renderAnswer(streetName, refDate, alternatives) {
       runQuery(street, refDate);
     });
   });
+
+  const showMapBtn = document.getElementById('btn-show-map');
+  if (showMapBtn) showMapBtn.addEventListener('click', () => switchTab('mappa'));
 
   drawSegmentsAndFit(segments);
 }
@@ -304,15 +309,14 @@ function renderNearby(lat, lon, refDate) {
     })
     .slice(0, 8);
 
-  let html = '<h2>🏆 Dove parcheggiare vicino a te</h2>';
-  html += '<p class="answer-lead">Consiglio le vie libere più vicine rispetto a ' + fmtDateTime(refDate) + '.</p>';
+  let html = '<p class="answer-lead">Le vie libere più vicine rispetto a ' + fmtDateTime(refDate) + '.</p>';
 
   if (recommended.length) {
     html += '<div class="section-label">Consigliati — liberi e vicini</div><div class="segment-list">';
     for (const seg of recommended) html += segmentCardHtml(seg, { showVia: true, distance: seg.dist, recommended: true });
     html += '</div>';
   } else {
-    html += '<p class="no-result">Nessuna via completamente libera trovata nelle vicinanze in questo momento: guarda comunque le altre opzioni qui sotto.</p>';
+    html += '<p class="no-result">Nessuna via completamente libera nelle vicinanze in questo momento: guarda le altre opzioni qui sotto.</p>';
   }
 
   if (others.length) {
@@ -321,11 +325,10 @@ function renderNearby(lat, lon, refDate) {
     html += '</div>';
   }
 
-  answerEl.hidden = false;
-  answerEl.innerHTML = html;
+  showMapSheet('🏆 Vicino a te', html);
   drawSegmentsAndFit(recommended.concat(others));
-  map.setView([lat, lon], 16);
-  L.marker([lat, lon]).addTo(layerGroup).bindPopup('Sei qui').openPopup();
+  L.marker([lat, lon]).addTo(layerGroup).bindPopup('Sei qui');
+  switchTab('mappa');
 }
 
 // ---------- Ho parcheggiato qui ----------
@@ -347,6 +350,61 @@ function clearParkedCar() {
 const parkPickerEl = document.getElementById('park-picker');
 const manualParkEl = document.getElementById('manual-park');
 const carPanelEl = document.getElementById('car-panel');
+const mapSheetEl = document.getElementById('map-sheet');
+
+// ---------- Schede (tab bar in basso) ----------
+const TAB_TITLES = { verifica: 'Verifica una via', auto: 'La tua auto', mappa: 'Mappa' };
+
+function switchTab(name) {
+  document.querySelectorAll('.tab-panel').forEach(p => { p.hidden = p.dataset.tab !== name; });
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('is-active', b.dataset.target === name));
+  const t = document.getElementById('topbar-title');
+  if (t) t.textContent = TAB_TITLES[name] || '';
+  if (name === 'mappa' && map) {
+    // La mappa era nascosta: Leaflet deve ricalcolare le dimensioni, poi
+    // ri-adatto l'inquadratura all'ultimo disegno.
+    setTimeout(() => {
+      map.invalidateSize();
+      if (lastBounds && lastBounds.length) map.fitBounds(lastBounds, { padding: [30, 30], maxZoom: 17 });
+    }, 60);
+  } else {
+    window.scrollTo(0, 0);
+  }
+}
+
+function updateAutoBadge() {
+  const b = document.getElementById('tab-badge-auto');
+  if (b) b.hidden = !getParkedCar();
+}
+
+// Pannello a scomparsa in fondo alla mappa (risultati ricerca / consigli)
+function showMapSheet(title, innerHtml) {
+  mapSheetEl.hidden = false;
+  mapSheetEl.innerHTML =
+    '<div class="map-sheet-grabber"></div>' +
+    '<div class="map-sheet-head"><h2>' + title + '</h2>' +
+    '<button type="button" class="map-sheet-close" id="map-sheet-close" aria-label="Chiudi">✕</button></div>' +
+    innerHtml;
+  document.getElementById('map-sheet-close').addEventListener('click', () => { mapSheetEl.hidden = true; });
+  mapSheetEl.scrollTop = 0;
+}
+
+// Ricerca via dalla scheda Mappa: disegna e mostra il riepilogo nel pannello,
+// restando sulla mappa (a differenza di renderAnswer che sta nella scheda Verifica).
+function renderMapStreet(streetName, refDate) {
+  const records = recordsForStreet(streetName);
+  const segments = groupSegments(records).map(seg => Object.assign(seg, evaluateSegment(seg, refDate)));
+  if (!segments.length) {
+    showMapSheet(titleCase(streetName), '<p class="no-result">Nessuna regola di pulizia per questa via nel dataset.</p>');
+    return;
+  }
+  segments.sort((a, b) => (a.tr || '').localeCompare(b.tr || ''));
+  let html = '<div class="segment-list">';
+  for (const seg of segments) html += segmentCardHtml(seg);
+  html += '</div>';
+  showMapSheet('Risultato: ' + titleCase(streetName), html);
+  drawSegmentsAndFit(segments);
+}
 
 function handleParkHere() {
   if (!navigator.geolocation) {
@@ -371,6 +429,7 @@ function handleParkHere() {
 }
 
 function showParkPicker(candidates, lat, lon) {
+  switchTab('auto');
   let html = '<h2>🚗 Conferma dove hai parcheggiato</h2>';
   html += '<p class="answer-lead">Ho trovato più tratti vicini alla tua posizione: scegli quello giusto.</p>';
   html += '<div class="pick-list">';
@@ -464,6 +523,7 @@ function confirmParkedHere(seg, lat, lon) {
   };
   saveParkedCar(car);
   renderCarPanel();
+  switchTab('auto');
   checkCarReminder();
   syncPushCarInfo(car);
   const segEval = Object.assign({}, seg, evaluateSegment(seg, new Date()));
@@ -633,6 +693,7 @@ async function disablePushRecord() {
 }
 
 function renderCarPanel() {
+  updateAutoBadge();
   const car = getParkedCar();
   if (!car) { carPanelEl.hidden = true; carPanelEl.innerHTML = ''; return; }
 
@@ -991,4 +1052,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('btn-park-here').addEventListener('click', handleParkHere);
   document.getElementById('btn-park-manual').addEventListener('click', showManualParkForm);
+
+  // Schede in basso
+  document.querySelectorAll('.tab-btn').forEach((b) => {
+    b.addEventListener('click', () => switchTab(b.dataset.target));
+  });
+
+  // Pulsante flottante "Ho parcheggiato qui" sulla mappa
+  document.getElementById('fab-park').addEventListener('click', handleParkHere);
+
+  // Ricerca dalla scheda Mappa
+  const mapSearch = document.getElementById('map-search-input');
+  mapSearch.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    const text = mapSearch.value.trim();
+    if (!text) return;
+    const matches = findStreetMatches(text);
+    if (!matches.length) {
+      showMapSheet('Nessun risultato', '<p class="no-result">Nessuna via trovata per "' + escapeHtml(text) + '".</p>');
+      return;
+    }
+    renderMapStreet(matches[0], parseWhenFromText(text, new Date()));
+  });
+
+  updateAutoBadge();
 });
