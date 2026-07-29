@@ -22,13 +22,34 @@ function loadRecords() {
   return SWEEPING_RECORDS;
 }
 
+// Legge le iscrizioni dal Worker con qualche ritentativo. Un blip di rete
+// (ETIMEDOUT verso Cloudflare) non deve far fallire il workflow: altrimenti
+// GitHub manda una mail "run failed" per un intoppo passeggero, e il tick
+// successivo (tra 5 min) recupera comunque.
+async function fetchSubscriptions() {
+  const attempts = 3;
+  for (let i = 1; i <= attempts; i++) {
+    try {
+      const res = await fetch(WORKER_URL + '/list', {
+        headers: { Authorization: `Bearer ${WORKER_SHARED_SECRET}` }
+      });
+      if (!res.ok) throw new Error('worker /list HTTP ' + res.status);
+      return await res.json();
+    } catch (err) {
+      console.warn(`Tentativo ${i}/${attempts} di lettura iscrizioni fallito: ${err.message}`);
+      if (i < attempts) await new Promise((r) => setTimeout(r, 2000 * i));
+    }
+  }
+  return null;
+}
+
 async function main() {
   const records = loadRecords();
-  const res = await fetch(WORKER_URL + '/list', {
-    headers: { Authorization: `Bearer ${WORKER_SHARED_SECRET}` }
-  });
-  if (!res.ok) throw new Error('Impossibile leggere le iscrizioni dal worker: ' + res.status);
-  const subs = await res.json();
+  const subs = await fetchSubscriptions();
+  if (subs === null) {
+    console.warn('Worker irraggiungibile dopo i tentativi: salto questo giro senza errore fatale.');
+    return;
+  }
   console.log(`Trovate ${subs.length} iscrizioni push.`);
 
   const now = new Date();
